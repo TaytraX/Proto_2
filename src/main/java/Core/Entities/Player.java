@@ -1,4 +1,4 @@
-package Core.Player;
+package Core.Entities;
 
 import org.joml.Vector3f;
 
@@ -10,9 +10,9 @@ public class Player {
 
     // Constantes de gameplay
     private static final float MOVE_SPEED = 0.01f;      // Vitesse de déplacement horizontal
-    private static final float JUMP_STRENGTH = 0.02f;   // Force du saut
-    private static final float GRAVITY = -0.001f;       // Gravité
-    private static final float GROUND_LEVEL = -0.5f;    // Niveau du sol
+    private static final float JUMP_STRENGTH = 0.05f;   // Force du saut
+    private static final float GRAVITY = -0.0025f;       // Gravité
+    private static final float GROUND_LEVEL = -0.4f;    // Niveau du sol
 
     // États du joueur
     private boolean isOnGround = true;
@@ -53,7 +53,7 @@ public class Player {
         }
 
         // Limiter les mouvements horizontaux (optionnel)
-        if (position.x < -1.5f) position.x = -1.5f;
+        if (position.x < -1.0f) position.x = -1.0f;
         if (position.x > 1.5f) position.x = 1.5f;
     }
 

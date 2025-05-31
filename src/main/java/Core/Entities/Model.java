@@ -1,4 +1,4 @@
-package Core.Entites;
+package Core.Entities;
 
 public class Model {
 
