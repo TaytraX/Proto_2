@@ -33,44 +33,36 @@ public class TestGame implements Ilogic {
         renderer.init();
 
         float[] vertices = {
-                -0.4f, -0.6f,  0.0f,  // Coin bas-gauche
-                -0.4f,  0.6f,  0.0f,  // Coin haut-gauche
-                0.4f,  0.6f,  0.0f,  // Coin haut-droite
-                0.4f, -0.6f,  0.0f   // Coin bas-droite
+                -0.4f, -0.6f,  0.0f,
+                -0.4f,  0.6f,  0.0f,
+                0.4f,  0.6f,  0.0f,
+                0.4f, -0.6f,  0.0f
         };
 
-        int[] indices = {
-                0, 1, 3,  // Premier triangle
-                3, 1, 2   // Second triangle
-        };
+        int[] indices = { 0, 1, 3, 3, 1, 2 };
 
         float[] textureCoords = {
-                0.0f, 0.0f,  // Coin bas-gauche
-                0.0f, 1.0f,  // Coin haut-gauche
-                1.0f, 1.0f,  // Coin haut-droite
-                1.0f, 0.0f   // Coin bas-droite
+                0.0f, 0.0f,
+                0.0f, 1.0f,
+                1.0f, 1.0f,
+                1.0f, 0.0f
         };
 
-        // Créer le modèle
         Model model = loader.loadModel(vertices, textureCoords, indices);
 
-        // ✅ NOUVEAU: Créer le joueur avec le modèle
-        player = new Player(model);
+        // ✅ CORRECTION: Passer le loader au joueur
+        player = new Player(model, loader);
 
-        // Charger la texture
+        // Charger texture initiale
         try {
             int textureId = loader.loadTexture("src/main/resources/textures/player1.png");
             model.setTexture(new Texture(textureId));
-            System.out.println("✅ Texture chargée avec succès ! ID: " + textureId);
+            System.out.println("✅ Texture initiale chargée ! ID: " + textureId);
         } catch (Exception e) {
-            System.err.println("❌ Erreur chargement texture : " + e.getMessage());
-            e.printStackTrace();
-
+            System.err.println("❌ Erreur chargement texture initiale : " + e.getMessage());
             try {
-                System.out.println("🔄 Création d'une texture par défaut...");
                 int defaultTextureId = loader.createDefaultTexture();
                 model.setTexture(new Texture(defaultTextureId));
-                System.out.println("⚪ Texture par défaut créée avec ID: " + defaultTextureId);
             } catch (Exception fallbackError) {
                 System.err.println("❌ Impossible de créer une texture par défaut");
             }
@@ -82,7 +74,7 @@ public class TestGame implements Ilogic {
         // ✅ NOUVEAU: Gestion des inputs pour le joueur
 
         // Saut avec W
-        if (window.isKeyPressed(GLFW.GLFW_KEY_W)) {
+        if (window.isKeyPressed(GLFW.GLFW_KEY_W) || window.isKeyPressed(GLFW.GLFW_KEY_SPACE)) {
             player.jump();
         }
 
