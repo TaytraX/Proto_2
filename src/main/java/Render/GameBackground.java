@@ -18,17 +18,20 @@ public class GameBackground {
     private int vboId;
     private float time = 0.0f;
 
-    public GameBackground() throws Exception {
+    public GameBackground() {
         window = Main.getWindow();
-        init();
     }
 
-    private void init() throws Exception {
+    public void init() throws Exception {
         // 1. D'abord créer et compiler les shaders
         backgroundShader = new ShaderManager();
 
         String vertexShader = Utils.loadRessource("/shaders/background.vs.glsl");
         String fragmentShader = Utils.loadRessource("/shaders/background.fs.glsl");
+
+        if (vertexShader == null || fragmentShader == null) {
+            throw new Exception("Erreur lors du chargement des shaders");
+        }
 
         backgroundShader.createVertexShader(vertexShader);
         backgroundShader.createFragmentShader(fragmentShader);

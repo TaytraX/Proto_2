@@ -80,32 +80,6 @@ public class RenderManager {
         shader.unbind();
     }
 
-    // Méthode de rendu sans position (pour compatibilité)
-    public void render(Model model) {
-        render(model, new Vector3f(0.0f, 0.0f, 0.0f));
-    }
-
-    // Méthode pour rendu wireframe
-    public void renderWireframe(Model model) {
-        if (model == null) return;
-
-        clear();
-
-        // Rendu en wireframe
-        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
-
-        GL30.glBindVertexArray(model.getId());
-        GL20.glEnableVertexAttribArray(0);
-
-        GL11.glDrawElements(GL11.GL_TRIANGLES, model.getVertexCount(), GL11.GL_UNSIGNED_INT, 0);
-
-        GL20.glDisableVertexAttribArray(0);
-        GL30.glBindVertexArray(0);
-
-        // Revenir au mode normal
-        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
-    }
-
     public void clear(){
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }

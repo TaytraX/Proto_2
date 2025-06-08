@@ -35,6 +35,7 @@ public class TestGame implements Ilogic {
     @Override
     public void inits() throws Exception {
         renderer.init();
+        gameBackground.init();
 
         float[] vertices = {
                 -0.4f, -0.6f,  0.0f,
