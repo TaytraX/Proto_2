@@ -11,7 +11,7 @@ public class EngineManager {
     public static final float FRAMERATE = 60.0f;
 
     private static int fps;
-    private static float frametime = 1.0f / FRAMERATE;
+    private static final float frametime = 1.0f / FRAMERATE;
 
     private boolean isRunning;
 

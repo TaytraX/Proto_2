@@ -23,16 +23,5 @@ void main() {
     textureColor.g < 0.1 &&
     textureColor.b < 0.1);
 
-    if (isWhite) {
-        discard; // Elimine complètement ces pixels
-    }
-
-    // Alternative: si vous voulez être plus sélectif, utilisez l'alpha
-    // float alpha = 1.0;
-    // if (isWhite || isParasiteGreen) {
-    //     alpha = 0.0;
-    // }
-    // fragColour = vec4(textureColor.rgb, alpha);
-
     fragColour = textureColor;
 }

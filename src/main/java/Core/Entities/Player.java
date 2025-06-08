@@ -27,10 +27,10 @@ public class Player {
     private boolean isOnGround = true;
     private boolean isMovingLeft = false;
     private boolean isMovingRight = false;
-    private boolean wasMoving = false;
 
-    // ✅ SOLUTION: Ajouter référence à ObjectLoader
-    private ObjectLoader loader;
+    private int effectiveDirection = 0;
+
+    private final ObjectLoader loader;
 
     public Player(Model model, ObjectLoader loader) { // ✅ Passer le loader
         this.model = model;
@@ -64,6 +64,7 @@ public class Player {
     }
 
     public void update() {
+        calculateEffectiveDirection();
         updateAnimationState();
 
         // ✅ CORRECTION: Vérifier si l'animation et la frame existent
@@ -88,9 +89,9 @@ public class Player {
             velocity.y += GRAVITY;
         }
 
-        if (isMovingLeft) {
+        if (effectiveDirection == -1) {
             velocity.x = -MOVE_SPEED;
-        } else if (isMovingRight) {
+        } else if (effectiveDirection == 1) {
             velocity.x = MOVE_SPEED;
         } else {
             velocity.x = 0.0f;
@@ -107,25 +108,38 @@ public class Player {
         }
 
         if (position.x < -1.0f) position.x = -1.0f;
-        if (position.x > 1.5f) position.x = 1.5f;
+        if (position.x > 1.0f) position.x = 1.0f;
+    }
 
-        wasMoving = isMovingLeft || isMovingRight;
+    // Méthode pour calculer la direction effective
+    private void calculateEffectiveDirection() {
+        if (isMovingLeft && isMovingRight) {
+            // ✅ Si les deux touches sont pressées = immobile
+            effectiveDirection = 0;
+        } else if (isMovingLeft) {
+            effectiveDirection = -1;
+        } else if (isMovingRight) {
+            effectiveDirection = 1;
+        } else {
+            effectiveDirection = 0;
+        }
     }
 
     private void updateAnimationState() {
-        Animation newAnimation = null;
+        Animation newAnimation;
 
-        if (!isOnGround && isMovingRight){
+        if (!isOnGround && effectiveDirection == 1) {
             newAnimation = jumpRigthAnimation;
-        } else if(!isOnGround && isMovingLeft) {
+        } else if (!isOnGround && effectiveDirection == -1) {
             newAnimation = jumpLeftAnimation;
         } else if (!isOnGround) {
             newAnimation = jumpAnimation;
-        }  else if (isMovingRight) {
+        } else if (effectiveDirection == 1) {
             newAnimation = walkRigthAnimation;
-        } else if (isMovingLeft) {
+        } else if (effectiveDirection == -1) {
             newAnimation = walkLeftAnimation;
         } else {
+            // ✅ Si effectiveDirection == 0 (immobile ou touches simultanées)
             newAnimation = idleAnimation;
         }
 
@@ -138,7 +152,7 @@ public class Player {
 
             String animName = (newAnimation == idleAnimation) ? "IDLE" :
                     (newAnimation == walkRigthAnimation || newAnimation == walkLeftAnimation) ? "WALK" : "JUMP";
-            System.out.println("🎬 Animation changée: " + animName);
+            System.out.println("🎬 Animation changée: " + animName + " (Direction: " + effectiveDirection + ")");
         }
     }
 
@@ -147,35 +161,18 @@ public class Player {
         if (isOnGround) {
             velocity.y = JUMP_STRENGTH;
             isOnGround = false;
-            System.out.println("🦘 Saut ! Position: " + position.y);
         }
     }
 
     public void moveLeft(boolean moving) {
         this.isMovingLeft = moving;
-        if (moving && !wasMoving) {
-            System.out.println("⬅️ Déplacement à gauche");
-        }
     }
 
     public void moveRight(boolean moving) {
         this.isMovingRight = moving;
-        if (moving && !wasMoving) {
-            System.out.println("➡️ Déplacement à droite");
-        }
     }
 
     // Getters...
     public Vector3f getPosition() { return position; }
     public Model getModel() { return model; }
-    public boolean isOnGround() { return isOnGround; }
-    public Vector3f getVelocity() { return velocity; }
-    public Animation getCurrentAnimation() { return currentAnimation; }
-    public boolean isAnimationPlaying() {
-        return currentAnimation != null && currentAnimation.isPlaying();
-    }
-
-    public void setPosition(float x, float y, float z) {
-        position.set(x, y, z);
-    }
 }

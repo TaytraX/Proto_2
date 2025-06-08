@@ -72,6 +72,7 @@ public class Window {
             glfwMaximizeWindow(window);
         }else{
             GLFWVidMode vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+            assert vidMode != null;
             glfwSetWindowPos(window, (vidMode.width() - width) / 2,
                     (vidMode.height() - height) / 2);
         }
@@ -86,8 +87,6 @@ public class Window {
 
         glfwShowWindow(window);
 
-        // Définir la couleur de fond
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
         // CORRIGÉ: Activer GL_DEPTH_TEST pour le rendu 3D
         glEnable(GL_DEPTH_TEST);
@@ -95,13 +94,6 @@ public class Window {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        // CORRIGÉ: Désactiver temporairement le culling pour debug
-        // glEnable(GL_CULL_FACE);
-        // glCullFace(GL_BACK);
-    }
-
-    public void clear() {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     }
 
     public void update() {
@@ -111,10 +103,6 @@ public class Window {
 
     public void cleanup(){
         glfwDestroyWindow(window);
-    }
-
-    public void setClearColour(float r, float g, float b, float a){
-        glClearColor(r, g, b, a);
     }
 
     public boolean isKeyPressed(int keycode){

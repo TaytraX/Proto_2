@@ -22,17 +22,13 @@ public class Utils {
         return buffer;
     }
 
-    public static String loadRessource(String filename) throws Exception {
-        String result;
-        try(InputStream in = Utils.class.getResourceAsStream(filename)) {
-            if (in == null) {
-                throw new Exception("Resource not found: " + filename);
-            }
-            try(Scanner scan = new Scanner(in, StandardCharsets.UTF_8.name())) {
-                result = scan.useDelimiter("\\A").next();
-            }
+    public static String loadRessource(String path) throws Exception {
+        try (InputStream in = Utils.class.getResourceAsStream(path);
+             Scanner scanner = new Scanner(in, "UTF-8")) {
+            return scanner.useDelimiter("\\A").next();
+        } catch (Exception e) {
+            throw new Exception("Erreur lors du chargement de la ressource: " + path, e);
         }
-        return result;
     }
 
 }

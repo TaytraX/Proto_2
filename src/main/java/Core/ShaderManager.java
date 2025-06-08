@@ -34,10 +34,17 @@ public class ShaderManager {
         }
     }
 
-    public void setUniform(String uniformName, int value) {
-        GL20.glUniform1i(uniforms.get(uniformName), value);
+    public void setUniform(String uniformName, float value) {
+        GL20.glUniform1f(uniforms.get(uniformName), value);
     }
 
+    public void setUniform(String uniformName, float x, float y) {
+        GL20.glUniform2f(uniforms.get(uniformName), x, y);
+    }
+
+    public void setUniform(String uniformName, int width, int value) {
+        GL20.glUniform1i(uniforms.get(uniformName), value);
+    }
     public void createVertexShader(String shaderCode) throws Exception {
         vertexShaderID = createShader(shaderCode, GL20.GL_VERTEX_SHADER);
     }
