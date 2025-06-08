@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
@@ -18,25 +19,42 @@ public class GameBackground {
     private ShaderManager backgroundShader;
     private int vaoId;
     private int vboId;
-    private float time = 0.0f;
+    private int eboId;
+    public float time; // ✅ AJOUTÉ: Element Buffer Object
+
 
     public GameBackground() {
         window = Main.getWindow();
     }
 
     public void init() throws Exception {
-        // 1. D'abord créer et compiler les shaders
+        System.out.println("🚀 Initialisation du GameBackground...");
+
+        // 1. Créer et compiler les shaders
         backgroundShader = new ShaderManager();
 
-        backgroundShader.createVertexShader(Utils.loadRessource("/shaders/background.vs.glsl"));
-        backgroundShader.createFragmentShader(Utils.loadRessource("/shaders/background.fs.glsl"));
+        String vertexCode = Utils.loadRessource("/shaders/background.vs.glsl");
+        String fragmentCode = Utils.loadRessource("/shaders/background.fs.glsl");
+
+        System.out.println("📝 Code vertex shader:");
+        System.out.println(vertexCode);
+        System.out.println("📝 Code fragment shader:");
+        System.out.println(fragmentCode);
+
+        backgroundShader.createVertexShader(vertexCode);
+        backgroundShader.createFragmentShader(fragmentCode);
         backgroundShader.link();
 
-        // 2. ENSUITE créer les uniforms (après link())
-        backgroundShader.createUniform("time");
-        backgroundShader.createUniform("resolution");
+        // 2. ✅ CORRECTION : Créer les uniforms APRÈS la liaison
+        try {
+            backgroundShader.createUniform("time");
+            backgroundShader.createUniform("resolution");
+            System.out.println("✅ Uniforms créés avec succès");
+        } catch (Exception e) {
+            System.err.println("⚠️ Attention: Uniforms non trouvés dans le shader (peut être normal)");
+        }
 
-        // 🔧 FIX 1: Vertices avec indices pour éviter les problèmes de rendu
+        // 3. Créer la géométrie pour un quad plein écran
         float[] vertices = {
                 -1.0f, -1.0f, -0.9f,  // Bas gauche
                 1.0f, -1.0f, -0.9f,  // Bas droit
@@ -44,28 +62,27 @@ public class GameBackground {
                 -1.0f,  1.0f, -0.9f   // Haut gauche
         };
 
-        // 🔧 FIX 2: Ajouter des indices pour un rendu correct
         int[] indices = {
                 0, 1, 2,  // Premier triangle
                 2, 3, 0   // Deuxième triangle
         };
 
-        // Création du VAO et VBO
+        // 4. Création et configuration des buffers OpenGL
         vaoId = GL30.glGenVertexArrays();
         vboId = GL15.glGenBuffers();
-        int eboId = GL15.glGenBuffers(); // 🔧 FIX 3: Ajouter un Element Buffer Object
+        eboId = GL15.glGenBuffers();
 
         GL30.glBindVertexArray(vaoId);
 
-        // Remplissage du VBO avec les vertices
+        // VBO pour les vertices
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
         FloatBuffer vertexBuffer = MemoryUtil.memAllocFloat(vertices.length);
         vertexBuffer.put(vertices).flip();
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_STATIC_DRAW);
 
-        // 🔧 FIX 4: Configuration de l'EBO
+        // EBO pour les indices
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, eboId);
-        var indicesBuffer = MemoryUtil.memAllocInt(indices.length);
+        IntBuffer indicesBuffer = MemoryUtil.memAllocInt(indices.length);
         indicesBuffer.put(indices).flip();
         GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_STATIC_DRAW);
 
@@ -73,7 +90,7 @@ public class GameBackground {
         GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0);
         GL20.glEnableVertexAttribArray(0);
 
-        // 🔧 FIX 5: Nettoyage sécurisé
+        // Cleanup
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -83,6 +100,9 @@ public class GameBackground {
         MemoryUtil.memFree(indicesBuffer);
 
         System.out.println("✅ GameBackground initialisé avec succès");
+        System.out.println("   VAO ID: " + vaoId);
+        System.out.println("   VBO ID: " + vboId);
+        System.out.println("   EBO ID: " + eboId);
     }
 
     public void update(float delta) {
@@ -90,65 +110,62 @@ public class GameBackground {
     }
 
     public void render() {
-
-        // Dans la méthode render de GameBackground
-        int timeLocation = GL20.glGetUniformLocation(backgroundShader.getProgramID(), "time");
-        int resolutionLocation = GL20.glGetUniformLocation(backgroundShader.getProgramID(), "resolution");
-
-// Vérifiez si les locations sont valides
-        if (timeLocation == -1) {
-            System.err.println("❌ Impossible de trouver l'uniform 'time'");
-        }
-        if (resolutionLocation == -1) {
-            System.err.println("❌ Impossible de trouver l'uniform 'resolution'");
-        }
-
-// Passez les valeurs aux uniforms
-        GL20.glUniform1f(timeLocation, (float) glfwGetTime()); // Pour le temps
-        GL20.glUniform2f(resolutionLocation, window.getWidth(), window.getHeight()); // Pour la résolution
         if (backgroundShader == null || vaoId == 0) {
             System.err.println("❌ GameBackground pas initialisé correctement");
             return;
         }
 
-        // Ajouter des logs de debug
-        System.out.println("Debug - time: " + time);
-        System.out.println("Debug - window dimensions: " + window.getWidth() + "x" + window.getHeight());
+        // ✅ CORRECTION : Gérer les dimensions de fenêtre invalides
+        float windowWidth = (float)window.getWidth();
+        float windowHeight = (float)window.getHeight();
 
-        // Sauvegarder l'état actuel
+        if (windowWidth <= 0 || windowHeight <= 0) {
+            System.err.println("❌ Taille de fenêtre invalide: " + windowWidth + "x" + windowHeight);
+            return;
+        }
+
+        // Sauvegarder l'état OpenGL
         boolean depthTestEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
 
-        // Nettoyer le framebuffer
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-
+        // Activer le shader
         backgroundShader.bind();
 
         try {
-            float windowWidth = (float)window.getWidth();
-            float windowHeight = (float)window.getHeight();
+            // ✅ CORRECTION : Passer les uniforms de manière sécurisée
+            // Utiliser glfwGetTime() pour un temps continu
+            float currentTime = (float) glfwGetTime();
 
-            if (windowWidth <= 0 || windowHeight <= 0) {
-                System.err.println("❌ Taille de fenêtre invalide: " + windowWidth + "x" + windowHeight);
-                return;
+            // Debug occasionnel
+            if (Math.random() < 0.01) { // 1% de chance d'afficher
+                System.out.println("🎨 Rendu background - time: " + currentTime +
+                        ", resolution: " + windowWidth + "x" + windowHeight);
             }
 
-            // Ajouter un log avant de passer les uniforms
-            System.out.println("Debug - Setting uniforms - time: " + time + ", resolution: " + windowWidth + "x" + windowHeight);
+            // ✅ MÉTHODE ALTERNATIVE: Passer les uniforms directement via OpenGL
+            int timeLocation = GL20.glGetUniformLocation(backgroundShader.getProgramID(), "time");
+            int resolutionLocation = GL20.glGetUniformLocation(backgroundShader.getProgramID(), "resolution");
 
-            backgroundShader.setUniform("time", time);
-            backgroundShader.setUniform("resolution", windowWidth, windowHeight);
+            if (timeLocation >= 0) {
+                GL20.glUniform1f(timeLocation, currentTime);
+            }
+            if (resolutionLocation >= 0) {
+                GL20.glUniform2f(resolutionLocation, windowWidth, windowHeight);
+            }
 
+            // Rendu du quad
             GL30.glBindVertexArray(vaoId);
             GL11.glDrawElements(GL11.GL_TRIANGLES, 6, GL11.GL_UNSIGNED_INT, 0);
             GL30.glBindVertexArray(0);
+
         } catch (Exception e) {
             System.err.println("❌ Erreur lors du rendu du fond: " + e.getMessage());
             e.printStackTrace();
         } finally {
+            // Nettoyage
             backgroundShader.unbind();
 
-            // Restaurer l'état précédent
+            // Restaurer l'état OpenGL
             if (depthTestEnabled) {
                 GL11.glEnable(GL11.GL_DEPTH_TEST);
             }
@@ -156,11 +173,13 @@ public class GameBackground {
     }
 
     public void cleanup() {
+        System.out.println("🧹 Nettoyage du GameBackground...");
+
         if (backgroundShader != null) {
             backgroundShader.cleanup();
+            backgroundShader = null;
         }
 
-        // 🔧 FIX 11: Nettoyage sécurisé des ressources OpenGL
         if (vaoId != 0) {
             GL30.glDeleteVertexArrays(vaoId);
             vaoId = 0;
@@ -168,6 +187,10 @@ public class GameBackground {
         if (vboId != 0) {
             GL15.glDeleteBuffers(vboId);
             vboId = 0;
+        }
+        if (eboId != 0) {
+            GL15.glDeleteBuffers(eboId);
+            eboId = 0;
         }
 
         System.out.println("✅ GameBackground nettoyé");
