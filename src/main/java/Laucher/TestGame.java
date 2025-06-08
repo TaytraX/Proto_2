@@ -34,8 +34,8 @@ public class TestGame implements Ilogic {
 
     @Override
     public void inits() throws Exception {
-        renderer.init();
         gameBackground.init();
+        renderer.init();
 
         float[] vertices = {
                 -0.4f, -0.6f,  0.0f,
@@ -90,7 +90,7 @@ public class TestGame implements Ilogic {
     @Override
     public void update() {
         // Mise à jour du fond d'écran
-        gameBackground.update(0.016f);
+        gameBackground.update(0.016f); // Environ 60 FPS
 
         // Mise à jour du joueur
         if (player != null) {
