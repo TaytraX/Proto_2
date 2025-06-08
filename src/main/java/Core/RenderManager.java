@@ -26,8 +26,9 @@ public class RenderManager {
         shader.createFragmentShader(Utils.loadRessource("/shaders/fragment.fs.glsl"));
         shader.link();
 
-        // ✅ AJOUT: Créer les uniforms nécessaires
-        shader.createUniform("textureSample");// ✅ NOUVEAU: Pour les transformations
+        // Créer TOUS les uniforms nécessaires
+        shader.createUniform("textureSample");
+        shader.createUniform("transformationMatrix");
     }
 
     // ✅ NOUVEAU: Méthode de rendu avec position
@@ -61,7 +62,7 @@ public class RenderManager {
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP);
 
-            shader.setUniform("textureSample", window.getWidth(), 0);
+            shader.setUniform("textureSample", 0);
         } else {
             System.out.println("⚠️ Pas de texture - rendu avec couleur par défaut");
             GL13.glActiveTexture(GL13.GL_TEXTURE0);
@@ -79,12 +80,12 @@ public class RenderManager {
         shader.unbind();
     }
 
-    // ✅ CONSERVÉ: Méthode de rendu sans position (pour compatibilité)
+    // Méthode de rendu sans position (pour compatibilité)
     public void render(Model model) {
         render(model, new Vector3f(0.0f, 0.0f, 0.0f));
     }
 
-    // ✅ CONSERVÉ: Méthode pour rendu wireframe
+    // Méthode pour rendu wireframe
     public void renderWireframe(Model model) {
         if (model == null) return;
 

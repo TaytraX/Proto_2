@@ -24,36 +24,26 @@ public class GameBackground {
     }
 
     private void init() throws Exception {
-        // Création du shader
+        // 1. D'abord créer et compiler les shaders
         backgroundShader = new ShaderManager();
-        System.out.println("Création des uniforms...");
-        backgroundShader.createUniform("time");
-        backgroundShader.createUniform("resolution");
 
-        System.out.println("Chargement des shaders...");
         String vertexShader = Utils.loadRessource("/shaders/background.vs.glsl");
         String fragmentShader = Utils.loadRessource("/shaders/background.fs.glsl");
 
-        if (vertexShader == null || vertexShader.isEmpty()) {
-            System.err.println("Erreur: Le vertex shader est vide ou n'a pas pu être chargé");
-        }
-        if (fragmentShader == null || fragmentShader.isEmpty()) {
-            System.err.println("Erreur: Le fragment shader est vide ou n'a pas pas pu être chargé");
-        }
-
         backgroundShader.createVertexShader(vertexShader);
         backgroundShader.createFragmentShader(fragmentShader);
-
-        System.out.println("Link des shaders...");
         backgroundShader.link();
-        System.out.println("Shaders liés avec succès !");
+
+        // 2. ENSUITE créer les uniforms (après link())
+        backgroundShader.createUniform("time");
+        backgroundShader.createUniform("resolution");
 
         // Création d'un simple quad qui couvre tout l'écran
         float[] vertices = {
-                -1.0f, -1.0f, 0.0f,  // Bas gauche
-                1.0f, -1.0f, 0.0f,  // Bas droit
-                1.0f,  1.0f, 0.0f,  // Haut droit
-                -1.0f,  1.0f, 0.0f   // Haut gauche
+                -1.0f, -1.0f, -0.9f,  // Bas gauche
+                 1.0f, -1.0f, -0.9f,  // Bas droit
+                 1.0f,  1.0f, -0.9f,  // Haut droit
+                -1.0f,  1.0f, -0.9f   // Haut gauche
         };
 
         // Création du VAO et VBO

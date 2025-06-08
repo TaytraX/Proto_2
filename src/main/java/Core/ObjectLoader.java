@@ -105,10 +105,9 @@ public class ObjectLoader {
         return textureId;
     }
 
-    // ✅ AJOUT: Méthode pour créer une texture par défaut (blanche)
     public int createDefaultTexture() {
-        // Créer une texture blanche 1x1
-        ByteBuffer whitePixel = ByteBuffer.allocateDirect(0);
+        // ✅ CORRECT : Allouer 4 bytes pour RGBA
+        ByteBuffer whitePixel = ByteBuffer.allocateDirect(4);
         whitePixel.put((byte) 255).put((byte) 255).put((byte) 255).put((byte) 255);
         whitePixel.flip();
 
@@ -116,12 +115,12 @@ public class ObjectLoader {
         textures.add(textureId);
 
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, 1, 1, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, whitePixel);
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, 1, 1, 0,
+                GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, whitePixel);
 
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 
-        System.out.println("⚪ Texture par défaut créée avec ID : " + textureId);
         return textureId;
     }
 
