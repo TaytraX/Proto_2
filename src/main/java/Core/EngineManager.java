@@ -90,6 +90,9 @@ public class EngineManager {
     }
 
     private void render() {
+
+        background.render();
+
         // Appeler le rendu de la logique de jeu
         gameLogic.render();
         window.update();
@@ -101,7 +104,10 @@ public class EngineManager {
 
     public void cleanup() {
         window.cleanup();
+
+        background.cleanup();
         gameLogic.cleanup();
+
         errorCallback.free();
         GLFW.glfwTerminate();
     }
