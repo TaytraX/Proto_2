@@ -17,13 +17,16 @@ public class EngineManager {
 
     private Window window;
     private GLFWErrorCallback errorCallback;
-    private Ilogic gameLogic;
+    private Ilogic gameLogic, background;
 
     private void Init() throws Exception{
         GLFW.glfwSetErrorCallback(errorCallback = GLFWErrorCallback.createPrint(System.err));
         window = Main.getWindow();
         gameLogic = Main.getGame();
+        background = Main.getBackground();
+
         window.init();
+        background.inits();
         gameLogic.inits();
     }
 
@@ -61,7 +64,7 @@ public class EngineManager {
 
                 if(framesCounter >= NANOSECOND){
                     setFps(frames);
-                    // CORRIGÉ: Mise à jour du titre avec les FPS
+                    // Mise à jour du titre avec les FPS
                     window.setTitle("Proto(2) : " + getFps() + " FPS");
                     frames = 0;
                     framesCounter = 0;
@@ -87,7 +90,7 @@ public class EngineManager {
     }
 
     private void render() {
-        // CORRIGÉ: Appeler le rendu de la logique de jeu
+        // Appeler le rendu de la logique de jeu
         gameLogic.render();
         window.update();
     }

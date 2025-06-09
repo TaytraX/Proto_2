@@ -6,7 +6,6 @@ import Core.Entities.Texture;
 import Core.Ilogic;
 import Core.ObjectLoader;
 import Core.RenderManager;
-import Render.GameBackground;
 import Render.Window;
 
 import org.lwjgl.glfw.GLFW;
@@ -17,7 +16,6 @@ public class TestGame implements Ilogic {
     private final RenderManager renderer;
     private final ObjectLoader loader;
     private final Window window;
-    GameBackground gameBackground;
 
     private Player player;
 
@@ -25,16 +23,10 @@ public class TestGame implements Ilogic {
         renderer = new RenderManager();
         window = Main.getWindow();
         loader = new ObjectLoader();
-        try {
-            gameBackground = new GameBackground();
-        } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de l'initialisation du fond d'écran", e);
-        }
     }
 
     @Override
     public void inits() throws Exception {
-        gameBackground.init();
         renderer.init();
 
         float[] vertices = {
@@ -89,8 +81,6 @@ public class TestGame implements Ilogic {
 
     @Override
     public void update() {
-        // Mise à jour du fond d'écran
-        gameBackground.update(0.016f); // Environ 60 FPS
 
         // Mise à jour du joueur
         if (player != null) {
@@ -105,9 +95,6 @@ public class TestGame implements Ilogic {
             GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
             window.setResize(false);
         }
-
-        // Rendu du fond d'écran
-        gameBackground.render();
 
         // Rendu du joueur par-dessus le ciel
         if (player != null && player.getModel() != null) {
@@ -132,10 +119,6 @@ public class TestGame implements Ilogic {
 
     @Override
     public void cleanup() {
-
-        if (gameBackground != null) {
-            gameBackground.cleanup();
-        }
 
         if (renderer != null) {
             renderer.cleanup();
