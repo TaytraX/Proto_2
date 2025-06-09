@@ -4,6 +4,7 @@ import Laucher.Main;
 import Render.Window;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.opengl.GL11;
 
 public class EngineManager {
 
@@ -26,8 +27,15 @@ public class EngineManager {
         background = Main.getBackground();
 
         window.init();
+
+        // ✅ CORRECTION: Initialiser le background AVANT le jeu
         background.inits();
         gameLogic.inits();
+
+        // ✅ CORRECTION: Configuration OpenGL pour le rendu en couches
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glDepthFunc(GL11.GL_LEQUAL);
+        GL11.glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Noir par défaut
     }
 
     public void start() throws Exception {
@@ -64,7 +72,6 @@ public class EngineManager {
 
                 if(framesCounter >= NANOSECOND){
                     setFps(frames);
-                    // Mise à jour du titre avec les FPS
                     window.setTitle("Proto(2) : " + getFps() + " FPS");
                     frames = 0;
                     framesCounter = 0;
@@ -90,11 +97,17 @@ public class EngineManager {
     }
 
     private void render() {
+        // ✅ CORRECTION: Ordre de rendu crucial
+        // 1. Clear une seule fois au début
+        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
+        // 2. Rendre le background EN PREMIER (arrière-plan)
         background.render();
 
-        // Appeler le rendu de la logique de jeu
+        // 3. Rendre le jeu PAR-DESSUS (premier plan)
         gameLogic.render();
+
+        // 4. Mettre à jour l'affichage
         window.update();
     }
 
@@ -104,10 +117,8 @@ public class EngineManager {
 
     public void cleanup() {
         window.cleanup();
-
         background.cleanup();
         gameLogic.cleanup();
-
         errorCallback.free();
         GLFW.glfwTerminate();
     }

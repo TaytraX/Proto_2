@@ -30,10 +30,10 @@ public class TestGame implements Ilogic {
         renderer.init();
 
         float[] vertices = {
-                -0.4f, -0.6f,  0.0f,
-                -0.4f,  0.6f,  0.0f,
-                 0.4f,  0.6f,  0.0f,
-                 0.4f, -0.6f,  0.0f
+                -0.4f,  -0.6f,  0.0f,
+                -0.4f,  0.66f,  0.0f,
+                 0.4f,  0.66f,  0.0f,
+                 0.4f,  -0.6f,  0.0f
         };
 
         int[] indices = { 0, 1, 3, 3, 1, 2 };

@@ -8,36 +8,37 @@ import org.joml.Vector3f;
 
 public class GameBackground implements Ilogic {
 
-    private final BackgroundManager renderer; // Utiliser BackgroundManager au lieu de RenderManager
+    private final BackgroundManager renderer;
     private final ObjectLoader loader;
     public final Window window;
 
-    private Model backgroundModel; // Modèle pour le background
+    private Model backgroundModel;
 
     public GameBackground() {
-        renderer = new BackgroundManager(); // Utiliser le bon renderer
+        renderer = new BackgroundManager();
         window = Main.getWindow();
         loader = new ObjectLoader();
     }
 
     @Override
     public void inits() throws Exception {
-        renderer.init(); // Initialiser le renderer
+        renderer.init();
 
-        // Créer un quad plein écran pour le background
+        // Créer un quad plein écran avec Z=0 (pas -0.9)
         float[] vertices = {
-                -1.0f, -1.0f,  -0.9f,  // Bas gauche
-                1.0f, -1.0f,  -0.9f,  // Bas droit
-                1.0f,  1.0f,  -0.9f,  // Haut droit
-                -1.0f,  1.0f,  -0.9f   // Haut gauche
+                -1.0f, -1.0f,  0.9f,  // Bas gauche
+                 1.0f, -1.0f,  0.9f,  // Bas droit
+                 1.0f,  1.0f,  0.9f,  // Haut droit
+                -1.0f,  1.0f,  0.9f   // Haut gauche
         };
 
+        // Ordre des indices correct pour le sens antihoraire
         int[] indices = {
                 0, 1, 2,  // Premier triangle
                 2, 3, 0   // Deuxième triangle
         };
 
-        // Coordonnées de texture (même si pas utilisées pour le background)
+        // Coordonnées de texture
         float[] textureCoords = {
                 0.0f, 0.0f,  // Bas gauche
                 1.0f, 0.0f,  // Bas droit
@@ -45,15 +46,13 @@ public class GameBackground implements Ilogic {
                 0.0f, 1.0f   // Haut gauche
         };
 
-        // Créer le modèle
         backgroundModel = loader.loadModel(vertices, textureCoords, indices);
-
         System.out.println("✅ Background model créé avec succès !");
     }
 
     @Override
     public void update() {
-        // Le background peut avoir des animations (temps qui passe, etc.)
+        // Le background peut avoir des animations
     }
 
     @Override
@@ -63,9 +62,8 @@ public class GameBackground implements Ilogic {
 
     @Override
     public void render() {
-        // ✅ CORRECTION: Effectuer le rendu du background
+        // Effectuer le rendu AVANT le clear du RenderManager
         if (backgroundModel != null) {
-            // Position fixe pour le background (il couvre tout l'écran)
             Vector3f position = new Vector3f(0.0f, 0.0f, 0.0f);
             renderer.render(backgroundModel, position);
         } else {
@@ -78,7 +76,6 @@ public class GameBackground implements Ilogic {
         if (renderer != null) {
             renderer.cleanup();
         }
-
         if (loader != null) {
             loader.cleanup();
         }

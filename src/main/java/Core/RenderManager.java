@@ -14,7 +14,7 @@ import org.lwjgl.opengl.GL30;
 
 public class RenderManager {
 
-    private final Window window;
+    public final Window window;
     private ShaderManager shader;
 
     public RenderManager() {
@@ -28,24 +28,24 @@ public class RenderManager {
         shader.createFragmentShader(Utils.loadRessource("/shaders/fragment.fs.glsl"));
         shader.link();
 
-        // Créer TOUS les uniforms nécessaires
         shader.createUniform("textureSample");
         shader.createUniform("transformationMatrix");
     }
 
-    // ✅ NOUVEAU: Méthode de rendu avec position
     public void render(Model model, Vector3f position) {
         if (model == null) {
             System.err.println("❌ Tentative de rendu d'un modèle null !");
             return;
         }
 
-        clear();
+        // ✅ CORRECTION: NE PAS appeler clear() ici pour préserver le background
+        // clear(); // <-- SUPPRIMÉ
+
         shader.bind();
 
-        // ✅ NOUVEAU: Créer et appliquer la matrice de transformation
+        // Créer et appliquer la matrice de transformation
         Matrix4f transformationMatrix = new Matrix4f().identity();
-        transformationMatrix.translate(position); // Appliquer la translation
+        transformationMatrix.translate(position);
         shader.setUniform("transformationMatrix", transformationMatrix);
 
         // Bind du VAO
@@ -58,7 +58,6 @@ public class RenderManager {
             GL13.glActiveTexture(GL13.GL_TEXTURE0);
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, model.getTexture().getId());
 
-            // Paramètres de texture
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
@@ -71,6 +70,10 @@ public class RenderManager {
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
         }
 
+        // ✅ CORRECTION: Activer le blending pour la transparence
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
         // Rendu des triangles
         GL11.glDrawElements(GL11.GL_TRIANGLES, model.getVertexCount(), GL11.GL_UNSIGNED_INT, 0);
 
@@ -80,10 +83,6 @@ public class RenderManager {
         GL30.glBindVertexArray(0);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
         shader.unbind();
-    }
-
-    public void clear(){
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }
 
     public void cleanup() {
