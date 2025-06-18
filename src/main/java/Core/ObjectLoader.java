@@ -1,7 +1,6 @@
 package Core;
 
 import Core.Entities.Model;
-import Core.Utils.Utils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
@@ -9,7 +8,6 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -18,156 +16,123 @@ import java.util.List;
 
 public class ObjectLoader {
 
-    private final List<Integer> VAOS = new ArrayList<>();
-    private final List<Integer> VBOS = new ArrayList<>();
-    private final List<Integer> textures = new ArrayList<>(); // nom de variable
+    private static volatile ObjectLoader instance;
+    private final Object loadLock = new Object(); // Verrou pour le chargement
 
-    public Model loadModel(float[] vertices, float[] textureCoords, int[] indices) {
-        int id = createVAO();
-        storeIndicesBuffer(indices);
-        storeDataInAttribList(0, 3, vertices);      // Position (x, y, z)
-        storeDataInAttribList(1, 2, textureCoords); // Texture (u, v)
-        unbind();
-        return new Model(id, indices.length);
-    }
+    // Liste des ressources pour le cleanup
+    private final List<Integer> vaos = new ArrayList<>();
+    private final List<Integer> vbos = new ArrayList<>();
+    private final List<Integer> textures = new ArrayList<>();
 
-    public int loadTexture(String filename) throws Exception {
-        int width, height;
-        ByteBuffer buffer;
+    public ObjectLoader() {} // Constructeur privé
 
-        System.out.println("🔍 Tentative de chargement de texture : " + filename);
-
-        // Vérification de l'existence du fichier
-        File textureFile = new File(filename);
-        if (!textureFile.exists()) {
-            // Essayer le chemin des resources
-            String resourcePath = "/textures/player1.png";
-            System.out.println("🔄 Fichier non trouvé, essai du chemin resource : " + resourcePath);
-
-            // Vérifier si la resource existe
-            if (getClass().getResourceAsStream(resourcePath) == null) {
-                throw new Exception("❌ Texture introuvable : " + filename + " et " + resourcePath);
-            }
-            filename = resourcePath;  // Utiliser le chemin resource
-        }
-
-        try(MemoryStack stack = MemoryStack.stackPush()){
-            IntBuffer w = stack.mallocInt(1);
-            IntBuffer h = stack.mallocInt(1);
-            IntBuffer c = stack.mallocInt(1);
-
-            // ✅ Important pour OpenGL
-            STBImage.stbi_set_flip_vertically_on_load(true);
-
-            // Gestion des resources et fichiers
-            if (filename.startsWith("/")) {
-                // Charger depuis les resources
-                java.net.URL resourceUrl = getClass().getResource(filename);
-                if (resourceUrl != null) {
-                    buffer = STBImage.stbi_load(resourceUrl.getPath(), w, h, c, 4);
-                } else {
-                    throw new Exception("Resource introuvable : " + filename);
+    // ✅ Singleton thread-safe avec double-checked locking
+    public static ObjectLoader getInstance() {
+        if (instance == null) {
+            synchronized (ObjectLoader.class) {
+                if (instance == null) {
+                    instance = new ObjectLoader();
                 }
-            } else {
-                // Charger depuis le système de fichiers
-                buffer = STBImage.stbi_load(filename, w, h, c, 4);
             }
-
-            if(buffer == null){
-                String error = STBImage.stbi_failure_reason();
-                System.err.println("❌ Erreur STB chargement : " + filename + " - " + error);
-                throw new Exception("Image File " + filename + " not loaded. Reason: " + error);
-            }
-
-            width = w.get();
-            height = h.get();
-
-            System.out.println("✅ Texture chargée avec succès : " + width + "x" + height + " pixels");
         }
-
-        // ✅ Création de la texture OpenGL
-        int textureId = GL11.glGenTextures();
-        textures.add(textureId); // utiliser la bonne liste
-
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-        GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
-
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP);
-
-        // ✅ Libérer la mémoire
-        STBImage.stbi_image_free(buffer);
-
-        System.out.println("🎨 Texture OpenGL créée avec ID : " + textureId);
-        return textureId;
+        return instance;
     }
 
-    public int createDefaultTexture() {
-        // ✅ CORRECT : Allouer 4 bytes pour RGBA
-        ByteBuffer whitePixel = ByteBuffer.allocateDirect(4);
-        whitePixel.put((byte) 255).put((byte) 255).put((byte) 255).put((byte) 255);
-        whitePixel.flip();
+    // ✅ Méthodes synchronized pour éviter les conflits OpenGL
+    public synchronized Model loadModel(float[] vertices, float[] textureCoords, int[] indices) {
+        int vao = GL30.glGenVertexArrays();
+        vaos.add(vao);
+        GL30.glBindVertexArray(vao);
 
-        int textureId = GL11.glGenTextures();
-        textures.add(textureId);
+        // Position buffer
+        int posVBO = GL15.glGenBuffers();
+        vbos.add(posVBO);
+        FloatBuffer posBuffer = org.lwjgl.BufferUtils.createFloatBuffer(vertices.length);
+        posBuffer.put(vertices).flip();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, posVBO);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, posBuffer, GL15.GL_STATIC_DRAW);
+        GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0);
 
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, 1, 1, 0,
-                GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, whitePixel);
+        // Texture coordinates buffer
+        int texVBO = GL15.glGenBuffers();
+        vbos.add(texVBO);
+        FloatBuffer texBuffer = org.lwjgl.BufferUtils.createFloatBuffer(textureCoords.length);
+        texBuffer.put(textureCoords).flip();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, texVBO);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, texBuffer, GL15.GL_STATIC_DRAW);
+        GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, 0, 0);
 
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+        // Index buffer
+        int ibo = GL15.glGenBuffers();
+        vbos.add(ibo);
+        IntBuffer indexBuffer = org.lwjgl.BufferUtils.createIntBuffer(indices.length);
+        indexBuffer.put(indices).flip();
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ibo);
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indexBuffer, GL15.GL_STATIC_DRAW);
 
-        return textureId;
-    }
-
-    private int createVAO() {
-        int id = GL30.glGenVertexArrays();
-        VAOS.add(id);
-        GL30.glBindVertexArray(id);
-        return id;
-    }
-
-    private void storeIndicesBuffer(int[] indices) {
-        int vbo = GL15.glGenBuffers();
-        VBOS.add(vbo);
-        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vbo);
-        IntBuffer buffer = Utils.storeDataInIntBuffer(indices);
-        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
-    }
-
-    private void storeDataInAttribList(int attribNo, int vertexCount, float[] data) {
-        int VBO = GL15.glGenBuffers();
-        VBOS.add(VBO);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, VBO);
-        FloatBuffer buffer = Utils.storeDataInFloatBuffer(data);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
-        GL20.glVertexAttribPointer(attribNo, vertexCount, GL11.GL_FLOAT, false, 0, 0);
-        GL20.glEnableVertexAttribArray(attribNo);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-    }
-
-    private void unbind() {
         GL30.glBindVertexArray(0);
+        return new Model(vao, indices.length);
     }
 
-    public void cleanup() {
-        // ✅ Nettoyage sécurisé
-        for(int VAO : VAOS) {
-            GL30.glDeleteVertexArrays(VAO);
-        }
-        for(int VBO : VBOS) {
-            GL30.glDeleteBuffers(VBO);
-        }
-        for(int texture : textures) { // ✅ CORRIGÉ: nom de variable
-            GL11.glDeleteTextures(texture);
-        }
+    public synchronized int loadTexture(String filename) throws Exception {
+        synchronized (loadLock) {
+            int width, height;
+            ByteBuffer buffer;
 
-        VAOS.clear();
-        VBOS.clear();
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                IntBuffer w = stack.mallocInt(1);
+                IntBuffer h = stack.mallocInt(1);
+                IntBuffer comp = stack.mallocInt(1);
+
+                buffer = STBImage.stbi_load(filename, w, h, comp, 4);
+                if (buffer == null) {
+                    throw new Exception("Could not load file " + filename + " " + STBImage.stbi_failure_reason());
+                }
+
+                width = w.get();
+                height = h.get();
+            }
+
+            int textureID = GL11.glGenTextures();
+            textures.add(textureID);
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+            GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
+            GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+
+            // Paramètres de filtrage
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+
+            STBImage.stbi_image_free(buffer);
+            return textureID;
+        }
+    }
+
+    public synchronized int createDefaultTexture() {
+        // Texture 2x2 pixels blancs
+        ByteBuffer data = org.lwjgl.BufferUtils.createByteBuffer(16);
+        for (int i = 0; i < 16; i++) {
+            data.put((byte) 255); // Blanc opaque
+        }
+        data.flip();
+
+        int textureID = GL11.glGenTextures();
+        textures.add(textureID);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, 2, 2, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data);
+
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+
+        return textureID;
+    }
+
+    public synchronized void cleanup() {
+        vaos.forEach(GL30::glDeleteVertexArrays);
+        vbos.forEach(GL15::glDeleteBuffers);
+        textures.forEach(GL11::glDeleteTextures);
+        vaos.clear();
+        vbos.clear();
         textures.clear();
     }
 }

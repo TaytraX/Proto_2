@@ -2,8 +2,8 @@ package Core.Entities;
 
 public class Model {
 
-    private int id;
-    private int vertexCount;
+    private final int id;
+    private final int vertexCount;
     private Texture texture;
 
     public Model(int id, int vertexCount) {
