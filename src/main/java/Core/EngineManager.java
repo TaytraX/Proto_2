@@ -6,6 +6,8 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL11;
 
+import java.util.concurrent.Future;
+
 public class EngineManager {
 
     public static final long NANOSECOND = 1000000000L;
@@ -16,15 +18,20 @@ public class EngineManager {
 
     private boolean isRunning;
 
-    private Window window;
+    private volatile Window window;
     private GLFWErrorCallback errorCallback;
     private Ilogic gameLogic, background;
+
+    private ThreadManager threadManager;
 
     private void Init() throws Exception{
         GLFW.glfwSetErrorCallback(errorCallback = GLFWErrorCallback.createPrint(System.err));
         window = Main.getWindow();
         gameLogic = Main.getGame();
         background = Main.getBackground();
+
+        // Initialiser le gestionnaire de threads
+        threadManager = new ThreadManager();
 
         window.init();
 
@@ -79,12 +86,55 @@ public class EngineManager {
             }
 
             if(render){
-                update();
-                render();
+                // Logique en parallèle, rendu en série
+                updateParallel();
+                renderSynchronized();
                 frames++;
             }
         }
         cleanup();
+    }
+    private void updateParallel() {
+        // Lancer les tâches de logique en parallèle
+        Future<?> playerTask = threadManager.updatePlayerLogic(() -> {
+            gameLogic.update();
+        });
+
+        Future<?> backgroundTask = threadManager.updateBackgroundLogic(() -> {
+            background.update();
+        });
+
+        // Attendre que les deux tâches se terminent avant de continuer
+        try {
+            playerTask.get(); // Bloque jusqu'à ce que la logique du joueur soit finie
+            backgroundTask.get(); // Bloque jusqu'à ce que la logique du background soit finie
+        } catch (Exception e) {
+            System.err.println("❌ Erreur dans les threads de logique: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+     // NOUVEAU : Rendu synchronisé (reste dans le thread principal)
+    private void renderSynchronized() {
+        // LE RENDU DOIT RESTER DANS LE THREAD PRINCIPAL !
+        // Mais on utilise les verrous pour accéder aux données en sécurité
+
+        // 1. Clear une seule fois au début
+        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+
+        // 2. Rendre le background avec protection
+        threadManager.withBackgroundLock(() -> {
+            background.render();
+        });
+
+        // 3. Rendre le jeu avec protection
+        threadManager.withPlayerLock(() -> {
+            gameLogic.render();
+        });
+
+        // 4. Mettre à jour l'affichage
+        window.update();
     }
 
     public void stop() {
@@ -116,6 +166,12 @@ public class EngineManager {
     }
 
     public void cleanup() {
+
+        // Arrêter les threads AVANT le cleanup OpenGL
+        if (threadManager != null) {
+            threadManager.shutdown();
+        }
+
         window.cleanup();
         background.cleanup();
         gameLogic.cleanup();

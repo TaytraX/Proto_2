@@ -1,6 +1,5 @@
 package Render;
 
-import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryUtil;
@@ -11,25 +10,19 @@ import static org.lwjgl.opengl.GL.*;
 
 public class Window {
 
-    public static final float FOV = (float) Math.toRadians(60);
-    public static final float Z_NEAR = 0.01F;
-    public static final float Z_FAR = 1000f;
-
     private String title;
 
     private int width, height;
     private long window;
 
-    private boolean resize, vSync;
-
-    private final Matrix4f projectionMatrix;
+    private boolean resize;
+    private final boolean vSync;
 
     public Window(String title, int width, int height, boolean vSync) {
         this.vSync = vSync;
         this.height = height;
         this.width = width;
         this.title = title;
-        projectionMatrix = new Matrix4f();
     }
 
     public void init(){
@@ -79,7 +72,7 @@ public class Window {
 
         glfwMakeContextCurrent(window);
 
-        // CORRIGÉ: Créer les capacités OpenGL - TRÈS IMPORTANT
+        // Créer les capacités OpenGL - TRÈS IMPORTANT
         createCapabilities();
 
         if(isvSync())
@@ -88,7 +81,7 @@ public class Window {
         glfwShowWindow(window);
 
 
-        // CORRIGÉ: Activer GL_DEPTH_TEST pour le rendu 3D
+        // Activer GL_DEPTH_TEST pour le rendu 3D
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_STENCIL_TEST);
         glEnable(GL_BLEND);
@@ -111,10 +104,6 @@ public class Window {
 
     public boolean windowShouldClose(){
         return glfwWindowShouldClose(window);
-    }
-
-    public String getTitle(){
-        return title;
     }
 
     public void setTitle(String newTitle){
@@ -142,25 +131,5 @@ public class Window {
         return height;
     }
 
-    public long getWindow() {
-        return window;
-    }
-
-    public Matrix4f getProjectionMatrix() {
-        return projectionMatrix;
-    }
-
-    // CORRIGÉ: Pour un rendu 2D simple, utiliser une matrice identité ou orthographique simple
-    public Matrix4f updateProjectionMatrix() {
-        // Option 1: Matrice identité pour coordonnées OpenGL directes (-1 à 1)
-        return projectionMatrix.identity();
-
-        // Option 2: Si vous voulez utiliser des coordonnées pixels, décommentez la ligne suivante:
-        // return projectionMatrix.setOrtho(0, width, 0, height, -1, 1);
-    }
-
-    public Matrix4f updateProjectionMatrix(Matrix4f matrix, int width, int height) {
-        float aspectRatio = (float) width / height;
-        return matrix.setPerspective(FOV, aspectRatio, Z_NEAR, Z_FAR);
-    }
+    // Pour un rendu 2D simple, utiliser une matrice identité ou orthographique simple
 }

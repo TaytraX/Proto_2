@@ -18,9 +18,9 @@ import java.util.List;
 
 public class ObjectLoader {
 
-    private List<Integer> VAOS = new ArrayList<>();
-    private List<Integer> VBOS = new ArrayList<>();
-    private List<Integer> textures = new ArrayList<>(); // ✅ CORRIGÉ: nom de variable
+    private final List<Integer> VAOS = new ArrayList<>();
+    private final List<Integer> VBOS = new ArrayList<>();
+    private final List<Integer> textures = new ArrayList<>(); // nom de variable
 
     public Model loadModel(float[] vertices, float[] textureCoords, int[] indices) {
         int id = createVAO();
@@ -37,7 +37,7 @@ public class ObjectLoader {
 
         System.out.println("🔍 Tentative de chargement de texture : " + filename);
 
-        // ✅ CORRIGÉ: Vérification de l'existence du fichier
+        // Vérification de l'existence du fichier
         File textureFile = new File(filename);
         if (!textureFile.exists()) {
             // Essayer le chemin des resources
@@ -59,7 +59,7 @@ public class ObjectLoader {
             // ✅ Important pour OpenGL
             STBImage.stbi_set_flip_vertically_on_load(true);
 
-            // ✅ CORRIGÉ: Gestion des resources et fichiers
+            // Gestion des resources et fichiers
             if (filename.startsWith("/")) {
                 // Charger depuis les resources
                 java.net.URL resourceUrl = getClass().getResource(filename);
@@ -87,7 +87,7 @@ public class ObjectLoader {
 
         // ✅ Création de la texture OpenGL
         int textureId = GL11.glGenTextures();
-        textures.add(textureId); // ✅ CORRIGÉ: utiliser la bonne liste
+        textures.add(textureId); // utiliser la bonne liste
 
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
         GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);

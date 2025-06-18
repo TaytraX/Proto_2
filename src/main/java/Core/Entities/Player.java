@@ -32,6 +32,9 @@ public class Player {
 
     private final ObjectLoader loader;
 
+    // Verrou pour synchroniser les mises à jour complexes
+    private final Object updateLock = new Object();
+
     public Player(Model model, ObjectLoader loader) { // ✅ Passer le loader
         this.model = model;
         this.loader = loader;
@@ -64,27 +67,27 @@ public class Player {
     }
 
     public void update() {
-        calculateEffectiveDirection();
-        updateAnimationState();
+        synchronized (updateLock) {
+            calculateEffectiveDirection();
+            updateAnimationState();
 
-        // ✅ CORRECTION: Vérifier si l'animation et la frame existent
-        if (currentAnimation != null) {
-            currentAnimation.update();
+            if (currentAnimation != null) {
+                currentAnimation.update();
 
-            Texture currentFrame = currentAnimation.getCurrentFrame();
-            if (currentFrame != null && model != null) {
-                model.setTexture(currentFrame);
+                Texture currentFrame = currentAnimation.getCurrentFrame();
+                if (currentFrame != null && model != null) {
+                    model.setTexture(currentFrame);
 
-                // Debug moins fréquent
-                if (Math.random() < 0.001) { // Très occasionnel
-                    System.out.println("🎬 Frame actuelle: " +
-                            currentAnimation.getCurrentFrameIndex() + "/" +
-                            currentAnimation.getFrameCount());
+                    if (Math.random() < 0.001) {
+                        System.out.println("🎬 Frame actuelle: " +
+                                currentAnimation.getCurrentFrameIndex() + "/" +
+                                currentAnimation.getFrameCount());
+                    }
                 }
             }
         }
 
-        // Logique de physique (inchangée)
+        // Logique de physique du joueur
         if (!isOnGround) {
             velocity.y += GRAVITY;
         }
@@ -155,24 +158,26 @@ public class Player {
             System.out.println("🎬 Animation changée: " + animName + " (Direction: " + effectiveDirection + ")");
         }
     }
-
-    // Méthodes existantes...
-    public void jump() {
+    // ✅ Méthodes d'entrée thread-safe
+    public synchronized void jump() {
         if (isOnGround) {
             velocity.y = JUMP_STRENGTH;
             isOnGround = false;
         }
     }
 
-    public void moveLeft(boolean moving) {
+    public synchronized void moveLeft(boolean moving) {
         this.isMovingLeft = moving;
     }
 
-    public void moveRight(boolean moving) {
+    public synchronized void moveRight(boolean moving) {
         this.isMovingRight = moving;
     }
 
-    // Getters...
-    public Vector3f getPosition() { return position; }
+    // ✅ Getters thread-safe
+    public synchronized Vector3f getPosition() {
+        return position; // Retourner une copie pour éviter les modifications concurrentes
+    }
+
     public Model getModel() { return model; }
 }

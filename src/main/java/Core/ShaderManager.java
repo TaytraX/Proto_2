@@ -21,7 +21,7 @@ public class ShaderManager {
         uniforms = new HashMap<>();
     }
 
-    public void createUniform(String uniformName) throws Exception {
+    public void createUniform(String uniformName) {
         int uniformLocation = GL20.glGetUniformLocation(programID, uniformName);
         if(uniformLocation < 0) {
             // 🔧 FIX 1: Warning au lieu d'exception pour les uniforms optionnels
@@ -39,7 +39,7 @@ public class ShaderManager {
     }
 
     public void setUniforms(String uniformName, Matrix4f value) {
-        if (!hasUniform(uniformName)) {
+        if (hasUniform(uniformName)) {
             System.out.println("⚠️ Tentative d'utilisation d'uniform inexistant: " + uniformName);
             return;
         }
