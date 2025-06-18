@@ -28,11 +28,11 @@ public class EngineManager {
 
         window.init();
 
-        // ✅ CORRECTION: Initialiser le background AVANT le jeu
+        // Initialiser le background AVANT le jeu
         background.inits();
         gameLogic.inits();
 
-        // ✅ CORRECTION: Configuration OpenGL pour le rendu en couches
+        // Configuration OpenGL pour le rendu en couches
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthFunc(GL11.GL_LEQUAL);
         GL11.glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Noir par défaut
@@ -97,7 +97,7 @@ public class EngineManager {
     }
 
     private void render() {
-        // ✅ CORRECTION: Ordre de rendu crucial
+        // Ordre de rendu crucial
         // 1. Clear une seule fois au début
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 

@@ -8,7 +8,7 @@ import org.lwjgl.Version;
 
 public class Main {
 
-    private static Window window;
+    private volatile static Window window;
     private static TestGame game;
     private static GameBackground background;
 
