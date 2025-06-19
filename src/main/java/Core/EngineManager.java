@@ -7,6 +7,8 @@ import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL11;
 
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class EngineManager {
 
@@ -95,19 +97,31 @@ public class EngineManager {
         cleanup();
     }
     private void updateParallel() {
-        // Lancer les tâches de logique en parallèle
+        // ✅ Ajouter timeout pour éviter les blocages
         Future<?> playerTask = threadManager.updatePlayerLogic(() -> {
-            gameLogic.update();
+            try {
+                gameLogic.update();
+            } catch (Exception e) {
+                System.err.println("❌ Erreur logique joueur: " + e.getMessage());
+            }
         });
 
         Future<?> backgroundTask = threadManager.updateBackgroundLogic(() -> {
-            background.update();
+            try {
+                background.update();
+            } catch (Exception e) {
+                System.err.println("❌ Erreur logique background: " + e.getMessage());
+            }
         });
 
         // Attendre que les deux tâches se terminent avant de continuer
         try {
-            playerTask.get(); // Bloque jusqu'à ce que la logique du joueur soit finie
-            backgroundTask.get(); // Bloque jusqu'à ce que la logique du background soit finie
+            playerTask.get(16, TimeUnit.MILLISECONDS); // Bloque jusqu'à ce que la logique du joueur soit finie
+            backgroundTask.get(16, TimeUnit.MILLISECONDS); // Bloque jusqu'à ce que la logique du background soit finie
+        } catch (TimeoutException e) {
+            System.err.println("⚠️ Timeout sur les tâches de logique");
+            playerTask.cancel(true);
+            backgroundTask.cancel(true);
         } catch (Exception e) {
             System.err.println("❌ Erreur dans les threads de logique: " + e.getMessage());
             e.printStackTrace();

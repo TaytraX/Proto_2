@@ -46,10 +46,10 @@ public class TestGame implements Ilogic {
         };
 
         float[] textureCoords = {
-                0.0f, 0.0f,  // Bas gauche
-                0.0f, 1.0f,  // Haut gauche
-                1.0f, 1.0f,  // Haut droit
-                1.0f, 0.0f   // Bas droit
+                0.0f, 1.0f,  // Bas gauche -> correspond au haut de l'image
+                0.0f, 0.0f,  // Haut gauche -> correspond au bas de l'image
+                1.0f, 0.0f,  // Haut droit -> correspond au bas de l'image
+                1.0f, 1.0f   // Bas droit -> correspond au haut de l'image
         };
 
         // ✅ Création du modèle avec le loader singleton

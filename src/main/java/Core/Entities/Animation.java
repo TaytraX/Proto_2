@@ -112,10 +112,11 @@ public class Animation {
         }
     }
 
-    public void update() {
-        if (!isPlaying || frames.length == 0) return;
+    public boolean update() {
 
         synchronized (animationLock) {
+            int oldPointer = pointer;
+
             currentTime = System.nanoTime() / 1_000_000_000.0;
             elapsedTime += (currentTime - lastTime);
             lastTime = currentTime;
@@ -133,6 +134,7 @@ public class Animation {
                     }
                 }
             }
+            return pointer != oldPointer;
         }
     }
 

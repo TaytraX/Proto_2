@@ -62,14 +62,18 @@ public class Player {
     }
 
     public void update() {
-        // Mise à jour de la logique de mouvement
+        boolean positionChanged;
+
         synchronized (positionLock) {
+            Vector3f oldPosition = new Vector3f(position);
             updateMovement();
+            positionChanged = !oldPosition.equals(position);
         }
 
-        // Mise à jour des animations
-        synchronized (animationLock) {
-            updateAnimations();
+        if (positionChanged) {
+            synchronized (animationLock) {
+                updateAnimations();
+            }
         }
     }
 
@@ -157,7 +161,7 @@ public class Player {
         }
     }
 
-    // ✅ Méthodes d'entrée thread-safe
+    // ✅ Méthodes d'entrée de thread safe
     public void jump() {
         synchronized (positionLock) {
             if (isOnGround) {
@@ -179,7 +183,7 @@ public class Player {
         }
     }
 
-    // ✅ Getter thread-safe avec copie défensive
+    // ✅ Getter thread safe avec copie défensive
     public Vector3f getPosition() {
         synchronized (positionLock) {
             return new Vector3f(position); // ✅ Copie pour éviter les modifications concurrentes
