@@ -7,9 +7,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * ✅ Gestionnaire de threads amélioré pour séparer la logique de jeu du rendu
  */
 public class ThreadManager {
-
-    // ✅ Thread pools avec noms pour le debug
-    private final ExecutorService logicExecutor;
+    // ✅ Un seul thread pour la logique de jeu
+    private final ExecutorService gameLogicExecutor;
     private final ExecutorService backgroundExecutor;
 
     // Verrous pour synchroniser l'accès aux données partagées
@@ -22,10 +21,12 @@ public class ThreadManager {
     private volatile boolean running = true;
 
     public ThreadManager() {
-        // ✅ Threads avec noms pour le debug
-        logicExecutor = Executors.newFixedThreadPool(2, r -> {
+
+
+        gameLogicExecutor = Executors.newSingleThreadExecutor(r -> {
             Thread t = new Thread(r, "GameLogic-Thread");
-            t.setDaemon(true); // ✅ Daemon threads pour fermeture propre
+            t.setDaemon(true);
+            t.setPriority(Thread.NORM_PRIORITY + 1); // Priorité légèrement plus élevée
             return t;
         });
 
@@ -40,7 +41,7 @@ public class ThreadManager {
      * ✅ Exécute la logique du joueur avec timeout
      */
     public Future<?> updatePlayerLogic(Runnable playerUpdateTask) {
-        return logicExecutor.submit(() -> {
+        return gameLogicExecutor.submit(() -> {
             if (!running) return;
 
             boolean lockAcquired = false;
@@ -92,6 +93,35 @@ public class ThreadManager {
             }
         });
     }
+
+
+    public Future<?> updateAllLogic(Runnable playerTask, Runnable backgroundTask) {
+        return gameLogicExecutor.submit(() -> {
+            if (!running) return;
+
+            try {
+                // Exécuter les deux tâches séquentiellement dans le même thread
+                if (playerLock.tryLock(TASK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                    try {
+                        playerTask.run();
+                    } finally {
+                        playerLock.unlock();
+                    }
+                }
+
+                if (backgroundLock.tryLock(TASK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                    try {
+                        backgroundTask.run();
+                    } finally {
+                        backgroundLock.unlock();
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+    }
+
 
     /**
      * ✅ Accès sécurisé aux données du joueur pour le rendu
@@ -147,13 +177,13 @@ public class ThreadManager {
 
         System.out.println("🔄 Arrêt des threads...");
 
-        logicExecutor.shutdown();
+        gameLogicExecutor.shutdown();
         backgroundExecutor.shutdown();
 
         try {
-            if (!logicExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+            if (!gameLogicExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
                 System.out.println("⚠️ Arrêt forcé du logicExecutor");
-                logicExecutor.shutdownNow();
+                gameLogicExecutor.shutdownNow();
             }
             if (!backgroundExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
                 System.out.println("⚠️ Arrêt forcé du backgroundExecutor");
@@ -162,7 +192,7 @@ public class ThreadManager {
             System.out.println("✅ Tous les threads arrêtés");
         } catch (InterruptedException e) {
             System.err.println("❌ Interruption pendant l'arrêt");
-            logicExecutor.shutdownNow();
+            gameLogicExecutor.shutdownNow();
             backgroundExecutor.shutdownNow();
             Thread.currentThread().interrupt();
         }

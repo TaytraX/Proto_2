@@ -96,38 +96,36 @@ public class EngineManager {
         }
         cleanup();
     }
+
     private void updateParallel() {
-        // ✅ Ajouter timeout pour éviter les blocages
-        Future<?> playerTask = threadManager.updatePlayerLogic(() -> {
-            try {
-                gameLogic.update();
-            } catch (Exception e) {
-                System.err.println("❌ Erreur logique joueur: " + e.getMessage());
-            }
-        });
+        // ✅ Une seule tâche pour toute la logique
+        Future<?> logicTask = threadManager.updateAllLogic(
+                () -> {
+                    try {
+                        gameLogic.update();
+                    } catch (Exception e) {
+                        System.err.println("❌ Erreur logique joueur: " + e.getMessage());
+                    }
+                },
+                () -> {
+                    try {
+                        background.update();
+                    } catch (Exception e) {
+                        System.err.println("❌ Erreur logique background: " + e.getMessage());
+                    }
+                }
+        );
 
-        Future<?> backgroundTask = threadManager.updateBackgroundLogic(() -> {
-            try {
-                background.update();
-            } catch (Exception e) {
-                System.err.println("❌ Erreur logique background: " + e.getMessage());
-            }
-        });
-
-        // Attendre que les deux tâches se terminent avant de continuer
+        // Attendre que la logique soit terminée
         try {
-            playerTask.get(16, TimeUnit.MILLISECONDS); // Bloque jusqu'à ce que la logique du joueur soit finie
-            backgroundTask.get(16, TimeUnit.MILLISECONDS); // Bloque jusqu'à ce que la logique du background soit finie
+            logicTask.get(16, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
-            System.err.println("⚠️ Timeout sur les tâches de logique");
-            playerTask.cancel(true);
-            backgroundTask.cancel(true);
+            System.err.println("⚠️ Timeout sur la logique de jeu");
+            logicTask.cancel(true);
         } catch (Exception e) {
-            System.err.println("❌ Erreur dans les threads de logique: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("❌ Erreur dans le thread de logique: " + e.getMessage());
         }
     }
-
 
      // NOUVEAU : Rendu synchronisé (reste dans le thread principal)
     private void renderSynchronized() {
