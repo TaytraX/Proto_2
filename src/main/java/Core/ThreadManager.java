@@ -37,64 +37,6 @@ public class ThreadManager {
         });
     }
 
-    /**
-     * ✅ Exécute la logique du joueur avec timeout
-     */
-    public Future<?> updatePlayerLogic(Runnable playerUpdateTask) {
-        return gameLogicExecutor.submit(() -> {
-            if (!running) return;
-
-            boolean lockAcquired = false;
-            try {
-                // ✅ Tentative d'acquisition avec timeout
-                lockAcquired = playerLock.tryLock(TASK_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                if (lockAcquired) {
-                    playerUpdateTask.run();
-                } else {
-                    System.out.println("⚠️ Timeout sur playerLock");
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                System.err.println("❌ Thread joueur interrompu");
-            } catch (Exception e) {
-                System.err.println("❌ Erreur dans updatePlayerLogic: " + e.getMessage());
-            } finally {
-                if (lockAcquired) {
-                    playerLock.unlock();
-                }
-            }
-        });
-    }
-
-    /**
-     * ✅ Exécute la logique du background avec timeout
-     */
-    public Future<?> updateBackgroundLogic(Runnable backgroundUpdateTask) {
-        return backgroundExecutor.submit(() -> {
-            if (!running) return;
-
-            boolean lockAcquired = false;
-            try {
-                lockAcquired = backgroundLock.tryLock(TASK_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                if (lockAcquired) {
-                    backgroundUpdateTask.run();
-                } else {
-                    System.out.println("⚠️ Timeout sur backgroundLock");
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                System.err.println("❌ Thread background interrompu");
-            } catch (Exception e) {
-                System.err.println("❌ Erreur dans updateBackgroundLogic: " + e.getMessage());
-            } finally {
-                if (lockAcquired) {
-                    backgroundLock.unlock();
-                }
-            }
-        });
-    }
-
-
     public Future<?> updateAllLogic(Runnable playerTask, Runnable backgroundTask) {
         return gameLogicExecutor.submit(() -> {
             if (!running) return;

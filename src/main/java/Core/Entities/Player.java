@@ -136,7 +136,7 @@ public class Player {
     }
 
     private void updateAnimationState() {
-        Animation newAnimation;
+        Animation newAnimation = null;
 
         if (!isOnGround && effectiveDirection == 1) {
             newAnimation = jumpRightAnimation;
