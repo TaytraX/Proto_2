@@ -138,27 +138,50 @@ public class Player {
     private void updateAnimationState() {
         Animation newAnimation = null;
 
-        if (!isOnGround && effectiveDirection == 1) {
+        // ✅ CORRECTION: Vérifier d'abord si on est au sol ET sans mouvement
+        if (isOnGround && effectiveDirection == 0) {
+            // ✅ Animation idle quand on est au sol et qu'on ne bouge pas
+            // (y compris quand A et D sont pressés simultanément)
+            newAnimation = idleAnimation;
+        }
+        // Animations de saut
+        else if (!isOnGround && effectiveDirection == 1) {
             newAnimation = jumpRightAnimation;
         } else if (!isOnGround && effectiveDirection == -1) {
             newAnimation = jumpLeftAnimation;
         } else if (!isOnGround) {
             newAnimation = jumpAnimation;
-        } else if (effectiveDirection == 1) {
+        }
+        // Animations de marche (seulement si on bouge vraiment)
+        else if (isOnGround && effectiveDirection == 1) {
             newAnimation = walkRightAnimation;
-        } else if (effectiveDirection == -1) {
+        } else if (isOnGround && effectiveDirection == -1) {
             newAnimation = walkLeftAnimation;
-        } else {
-            newAnimation = idleAnimation;
         }
 
+        // Changer d'animation si nécessaire
         if (newAnimation != currentAnimation && newAnimation != null) {
             if (currentAnimation != null) {
                 currentAnimation.stop();
             }
             currentAnimation = newAnimation;
             currentAnimation.play();
+
+            // ✅ Debug pour vérifier les changements d'animation
+            System.out.println("🎬 Animation changée vers: " + getAnimationName(newAnimation) +
+                    " (Direction: " + effectiveDirection + ", Au sol: " + isOnGround + ")");
         }
+    }
+
+    // ✅ Méthode helper pour le debug
+    private String getAnimationName(Animation animation) {
+        if (animation == idleAnimation) return "IDLE";
+        if (animation == walkRightAnimation) return "WALK_RIGHT";
+        if (animation == walkLeftAnimation) return "WALK_LEFT";
+        if (animation == jumpAnimation) return "JUMP";
+        if (animation == jumpRightAnimation) return "JUMP_RIGHT";
+        if (animation == jumpLeftAnimation) return "JUMP_LEFT";
+        return "UNKNOWN";
     }
 
     // ✅ Méthodes d'entrée de thread safe
