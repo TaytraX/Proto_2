@@ -1,6 +1,7 @@
 package Core.Entities;
 
 import Core.ObjectLoader;
+import Core.World.WorldManager;
 import org.joml.Vector3f;
 
 public class Player {
@@ -33,6 +34,7 @@ public class Player {
     private final Object positionLock = new Object();
     private final Object animationLock = new Object();
     private final Object inputLock = new Object();
+    private WorldManager worldManager;
 
     public Player(Model model) { // ✅ Plus besoin de passer le loader
         this.model = model;
@@ -80,7 +82,6 @@ public class Player {
     private void updateMovement() {
         calculateEffectiveDirection();
 
-        // Physique
         if (!isOnGround) {
             velocity.y += GRAVITY;
         }
@@ -95,12 +96,28 @@ public class Player {
 
         position.add(velocity);
 
-        // Collision avec le sol
+
+        // ✅ Collision avec les plateformes
+        if (worldManager != null) {
+            Vector3f playerSize = new Vector3f(0.8f, 1.2f, 0.1f); // Taille du joueur
+            Platform platformBelow = worldManager.findPlatformBelow(position, playerSize);
+
+            if (platformBelow != null && velocity.y <= 0) {
+                float platformTop = platformBelow.getTop();
+                if (position.y <= platformTop + playerSize.y/2) {
+                    position.y = platformTop + playerSize.y/2;
+                    velocity.y = 0.0f;
+                    isOnGround = true;
+                }
+            }
+        }
+
+        // Collision avec le sol par défaut
         if (position.y <= GROUND_LEVEL) {
             position.y = GROUND_LEVEL;
             velocity.y = 0.0f;
             isOnGround = true;
-        } else {
+        } else if (worldManager == null || worldManager.findPlatformBelow(position, new Vector3f(0.8f, 1.2f, 0.1f)) == null) {
             isOnGround = false;
         }
 
@@ -215,5 +232,9 @@ public class Player {
 
     public Model getModel() {
         return model;
+    }
+
+    public void setWorldManager(WorldManager worldManager) {
+        this.worldManager = worldManager;
     }
 }

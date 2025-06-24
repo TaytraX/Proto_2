@@ -6,6 +6,7 @@ import Core.Entities.Texture;
 import Core.Ilogic;
 import Core.ObjectLoader;
 import Core.RenderManager;
+import Core.World.WorldManager;
 import Render.Window;
 
 import org.lwjgl.glfw.GLFW;
@@ -16,6 +17,7 @@ public class TestGame implements Ilogic {
     private final RenderManager renderer;
     private final ObjectLoader loader;
     private final Window window;
+    private volatile WorldManager worldManager;
 
     private volatile Player player; // ✅ volatile pour visibilité entre threads
 
@@ -55,11 +57,15 @@ public class TestGame implements Ilogic {
         // ✅ Création du modèle avec le loader singleton
         Model model = loader.loadModel(vertices, textureCoords, indices);
         player = new Player(model); // ✅ Plus besoin de passer le loader
+        player.setWorldManager(worldManager);
 
         // ✅ Chargement de la texture initiale avec gestion d'erreur
         initializePlayerTexture(model);
 
         System.out.println("✅ TestGame initialisé avec succès !");
+        worldManager = new WorldManager();
+
+        System.out.println("✅ TestGame avec plateformes initialisé !");
     }
 
     // ✅ Méthode séparée pour l'initialisation de la texture
@@ -107,10 +113,14 @@ public class TestGame implements Ilogic {
         // ✅ Mise à jour thread-safe du joueur
         if (player != null) {
             try {
+                // Mettre à jour le monde en fonction du joueur
+                if (worldManager != null) {
+                    worldManager.update(player.getPosition());
+                }
+
                 player.update();
             } catch (Exception e) {
                 System.err.println("❌ Erreur dans update(): " + e.getMessage());
-                e.printStackTrace();
             }
         }
     }
@@ -118,20 +128,18 @@ public class TestGame implements Ilogic {
     @Override
     public void render() {
         try {
-            // Gérer le redimensionnement de la fenêtre
             if (window.isResize()) {
                 GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
                 window.setResize(false);
             }
 
-            // ✅ Rendu thread-safe du joueur
             synchronized (renderLock) {
-                renderPlayer();
+                renderWorld();    // ✅ Rendre les plateformes d'abord
+                renderPlayer();   // Puis le joueur par-dessus
             }
 
         } catch (Exception e) {
             System.err.println("❌ Erreur dans render(): " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -161,6 +169,16 @@ public class TestGame implements Ilogic {
             }
         } else {
             System.out.println("⚠️ Rendu sans texture");
+        }
+    }
+
+    private void renderWorld() {
+        if (worldManager != null) {
+            try {
+                worldManager.render(renderer);
+            } catch (Exception e) {
+                System.err.println("❌ Erreur rendu monde: " + e.getMessage());
+            }
         }
     }
 
