@@ -138,7 +138,7 @@ public class Player {
     private void updateAnimationState() {
         Animation newAnimation = null;
 
-        // ✅ CORRECTION: Vérifier d'abord si on est au sol ET sans mouvement
+        // Vérifier d'abord si on est au sol ET sans mouvement
         if (isOnGround && effectiveDirection == 0) {
             // ✅ Animation idle quand on est au sol et qu'on ne bouge pas
             // (y compris quand A et D sont pressés simultanément)

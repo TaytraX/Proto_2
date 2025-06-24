@@ -158,25 +158,6 @@ public class EngineManager {
         gameLogic.input();
     }
 
-    private void render() {
-        // Ordre de rendu crucial
-        // 1. Clear une seule fois au début
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-
-        // 2. Rendre le background EN PREMIER (arrière-plan)
-        background.render();
-
-        // 3. Rendre le jeu PAR-DESSUS (premier plan)
-        gameLogic.render();
-
-        // 4. Mettre à jour l'affichage
-        window.update();
-    }
-
-    private void update() {
-        gameLogic.update();
-    }
-
     public void cleanup() {
 
         // Arrêter les threads AVANT le cleanup OpenGL

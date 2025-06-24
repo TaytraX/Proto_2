@@ -22,7 +22,6 @@ public class ThreadManager {
 
     public ThreadManager() {
 
-
         gameLogicExecutor = Executors.newSingleThreadExecutor(r -> {
             Thread t = new Thread(r, "GameLogic-Thread");
             t.setDaemon(true);
