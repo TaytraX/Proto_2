@@ -1,5 +1,7 @@
 package Core;
 
+import Core.World.PlatformGenerator;
+import Core.World.PlatformManager;
 import Laucher.Main;
 import Render.Window;
 import org.lwjgl.glfw.GLFW;
@@ -23,6 +25,7 @@ public class EngineManager {
     private volatile Window window;
     private GLFWErrorCallback errorCallback;
     private Ilogic gameLogic, background;
+    private static PlatformManager platforms;
 
     private ThreadManager threadManager;
 
@@ -31,6 +34,7 @@ public class EngineManager {
         window = Main.getWindow();
         gameLogic = Main.getGame();
         background = Main.getBackground();
+        platforms = Main.getPlatforms();
 
         // Initialiser le gestionnaire de threads
         threadManager = new ThreadManager();
@@ -109,7 +113,7 @@ public class EngineManager {
                 },
                 () -> {
                     try {
-                        background.update();
+                        platforms.update(player.getPosition());
                     } catch (Exception e) {
                         System.err.println("❌ Erreur logique background: " + e.getMessage());
                     }
