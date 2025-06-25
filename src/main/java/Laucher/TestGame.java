@@ -9,6 +9,7 @@ import Core.RenderManager;
 import Core.World.WorldManager;
 import Render.Window;
 
+import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
@@ -110,12 +111,13 @@ public class TestGame implements Ilogic {
 
     @Override
     public void update() {
-        // ✅ Mise à jour thread-safe du joueur
         if (player != null) {
             try {
-                // Mettre à jour le monde en fonction du joueur
+                Vector3f playerPos = player.getPosition(); // ✅ Copie sécurisée
+
+                // Mettre à jour le monde AVANT le joueur
                 if (worldManager != null) {
-                    worldManager.update(player.getPosition());
+                    worldManager.update(playerPos);
                 }
 
                 player.update();
@@ -172,9 +174,11 @@ public class TestGame implements Ilogic {
         }
     }
 
+    // Dans TestGame.render() - Vérifier l'ordre
     private void renderWorld() {
         if (worldManager != null) {
             try {
+                // ✅ S'assurer que les plateformes sont à la bonne profondeur
                 worldManager.render(renderer);
             } catch (Exception e) {
                 System.err.println("❌ Erreur rendu monde: " + e.getMessage());

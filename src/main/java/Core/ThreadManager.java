@@ -16,7 +16,7 @@ public class ThreadManager {
     private final ReentrantLock backgroundLock = new ReentrantLock();
 
     // ✅ Timeout pour éviter les blocages
-    private static final long TASK_TIMEOUT_MS = 16; // ~60 FPS
+    private static final long TASK_TIMEOUT_MS = 40; // ~60 FPS
 
     private volatile boolean running = true;
 

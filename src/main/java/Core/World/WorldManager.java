@@ -52,27 +52,28 @@ public class WorldManager {
      * Met à jour le monde en fonction de la position du joueur
      */
     public void update(Vector3f playerPosition) {
-        // Génération dynamique si le joueur s'approche du bord
-        if (playerPosition.x > lastGeneratedX - GENERATION_DISTANCE) {
-            generateMorePlatforms();
-        }
+        synchronized (worldLock) {
+            // Génération dynamique si le joueur s'approche du bord
+            if (playerPosition.x > lastGeneratedX - GENERATION_DISTANCE) {
+                generateMorePlatforms();
+            }
 
-        // Optionnel: nettoyer les plateformes lointaines pour économiser la mémoire
-        cleanupDistantPlatforms(playerPosition);
+            // Nettoyer les plateformes lointaines
+            cleanupDistantPlatforms(playerPosition);
+        }
     }
 
     private void generateMorePlatforms() {
-        synchronized (worldLock) {
-            Vector3f startPos = new Vector3f(lastGeneratedX + 1.0f, -0.2f, 0.0f);
-            List<Platform> newPlatforms = generator.generatePlatforms(PLATFORMS_PER_CHUNK, startPos);
+        // Retirer le synchronized ici car déjà dans update()
+        Vector3f startPos = new Vector3f(lastGeneratedX + 1.0f, -0.2f, 0.0f);
+        List<Platform> newPlatforms = generator.generatePlatforms(PLATFORMS_PER_CHUNK, startPos);
 
-            platforms.addAll(newPlatforms);
-            if (!newPlatforms.isEmpty()) {
-                lastGeneratedX = newPlatforms.get(newPlatforms.size() - 1).getPosition().x;
-            }
-
-            System.out.println("🔨 " + newPlatforms.size() + " nouvelles plateformes générées");
+        platforms.addAll(newPlatforms);
+        if (!newPlatforms.isEmpty()) {
+            lastGeneratedX = newPlatforms.get(newPlatforms.size() - 1).getPosition().x;
         }
+
+        System.out.println("🔨 " + newPlatforms.size() + " nouvelles plateformes générées");
     }
 
     private void cleanupDistantPlatforms(Vector3f playerPosition) {
@@ -95,15 +96,23 @@ public class WorldManager {
         return null;
     }
 
-    /**
-     * Trouve la plateforme sous le joueur (pour l'atterrissage)
-     */
+
+    //  Trouve la plateforme sous le joueur (pour l'atterrissage)
+    // Dans WorldManager.java
     public Platform findPlatformBelow(Vector3f playerPos, Vector3f playerSize) {
         Platform closestPlatform = null;
         float closestDistance = Float.MAX_VALUE;
 
+        // ✅ Limiter la recherche aux plateformes proches
+        final float SEARCH_RADIUS = 2.0f;
+
         for (Platform platform : platforms) {
             Vector3f platformPos = platform.getPosition();
+
+            // ✅ Pré-filtrage par distance horizontale
+            if (Math.abs(platformPos.x - playerPos.x) > SEARCH_RADIUS) {
+                continue;
+            }
 
             // Vérifier si horizontalement aligné
             if (playerPos.x >= platform.getLeft() - playerSize.x/2 &&
@@ -111,7 +120,7 @@ public class WorldManager {
 
                 // Vérifier si la plateforme est en dessous
                 float distance = playerPos.y - platform.getTop();
-                if (distance > 0 && distance < closestDistance) {
+                if (distance > 0 && distance < closestDistance && distance < 1.0f) { // ✅ Limite de portée
                     closestDistance = distance;
                     closestPlatform = platform;
                 }
@@ -119,6 +128,18 @@ public class WorldManager {
         }
 
         return closestPlatform;
+    }
+    // Méthodes de debug à ajouter
+    public void printWorldState(Vector3f playerPos) {
+        System.out.println("🌍 État du monde:");
+        System.out.println("  - Plateformes: " + platforms.size());
+        System.out.println("  - Dernière X générée: " + lastGeneratedX);
+        System.out.println("  - Position joueur: " + playerPos.x);
+        System.out.println("  - Distance jusqu'à génération: " + (lastGeneratedX - playerPos.x));
+    }
+
+    public boolean shouldGenerateMore(Vector3f playerPos) {
+        return playerPos.x > lastGeneratedX - GENERATION_DISTANCE;
     }
 
     /**
