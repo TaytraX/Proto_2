@@ -39,7 +39,13 @@ public class WorldManager {
             }
         }
 
-        System.out.println("✅ " + initialPlatforms.size() + " plateformes initiales générées");
+        // Debug détaillé
+        System.out.println("✅ " + initialPlatforms.size() + " plateformes générées:");
+        for (int i = 0; i < initialPlatforms.size(); i++) {
+            Platform p = initialPlatforms.get(i);
+            System.out.println("  Plateforme " + i + ": X=" + p.getPosition().x +
+                    ", Y=" + p.getPosition().y + ", Largeur=" + p.getSize().x);
+        }
     }
 
     /**

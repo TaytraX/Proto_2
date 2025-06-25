@@ -126,18 +126,16 @@ public class PlatformGenerator {
         try {
             Model model = loader.loadModel(vertices, textureCoords, indices);
 
-            // Texture de plateforme (ou texture par défaut)
+            // Utiliser directement la texture par défaut (blanche)
             try {
-                int textureId = loader.loadTexture("src/main/resources/textures/platform.png");
-                model.setTexture(new Texture(textureId));
-            } catch (Exception e) {
-                // Texture par défaut si pas de texture de plateforme
-                int defaultId = loader.createDefaultTexture();
+                int defaultId = loader.createDefaultTexture(); // Texture blanche
                 model.setTexture(new Texture(defaultId));
+                System.out.println("✅ Plateforme avec texture par défaut créée");
+            } catch (Exception e) {
+                System.err.println("❌ Impossible de créer texture par défaut: " + e.getMessage());
             }
 
             return model;
-
         } catch (Exception e) {
             System.err.println("❌ Erreur création modèle plateforme: " + e.getMessage());
             return null;

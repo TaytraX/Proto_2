@@ -33,6 +33,7 @@ public class TestGame implements Ilogic {
     @Override
     public void inits() throws Exception {
         renderer.init();
+        worldManager = new WorldManager();
 
         // ✅ Géométrie du joueur (quad 2D)
         float[] vertices = {
@@ -63,7 +64,6 @@ public class TestGame implements Ilogic {
         initializePlayerTexture(model);
 
         System.out.println("✅ TestGame initialisé avec succès !");
-        worldManager = new WorldManager();
 
         System.out.println("✅ TestGame avec plateformes initialisé !");
     }
