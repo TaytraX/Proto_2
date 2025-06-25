@@ -1,6 +1,5 @@
 package Core;
 
-import Core.World.PlatformGenerator;
 import Core.World.PlatformManager;
 import Laucher.Main;
 import Render.Window;
@@ -25,7 +24,7 @@ public class EngineManager {
     private volatile Window window;
     private GLFWErrorCallback errorCallback;
     private Ilogic gameLogic, background;
-    private static PlatformManager platforms;
+    private static PlatformManager platforms; // ✅ Changé en PlatformManager
 
     private ThreadManager threadManager;
 
@@ -34,21 +33,22 @@ public class EngineManager {
         window = Main.getWindow();
         gameLogic = Main.getGame();
         background = Main.getBackground();
-        platforms = Main.getPlatforms();
+        platforms = new PlatformManager(); // ✅ Initialisation correcte
 
         // Initialiser le gestionnaire de threads
         threadManager = new ThreadManager();
 
         window.init();
 
-        // Initialiser le background AVANT le jeu
+        // Initialiser les composants dans l'ordre
+        platforms.inits(); // ✅ Initialiser les plateformes
         background.inits();
         gameLogic.inits();
 
         // Configuration OpenGL pour le rendu en couches
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthFunc(GL11.GL_LEQUAL);
-        GL11.glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Noir par défaut
+        GL11.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     }
 
     public void start() throws Exception {
@@ -92,7 +92,7 @@ public class EngineManager {
             }
 
             if(render){
-                // Logique en parallèle, rendu en série
+                // ✅ Mise à jour parallèle, rendu synchronisé
                 updateParallel();
                 renderSynchronized();
                 frames++;
@@ -102,7 +102,7 @@ public class EngineManager {
     }
 
     private void updateParallel() {
-        // ✅ Une seule tâche pour toute la logique
+        // ✅ Obtenir la position du joueur depuis gameLogic (TestGame)
         Future<?> logicTask = threadManager.updateAllLogic(
                 () -> {
                     try {
@@ -113,9 +113,10 @@ public class EngineManager {
                 },
                 () -> {
                     try {
-                        platforms.update(player.getPosition());
+                        // ✅ Pas besoin de position ici, le PlatformManager la récupère
+                        platforms.update(null); // ou passer une position par référence
                     } catch (Exception e) {
-                        System.err.println("❌ Erreur logique background: " + e.getMessage());
+                        System.err.println("❌ Erreur logique plateformes: " + e.getMessage());
                     }
                 },
                 () -> {
@@ -138,25 +139,39 @@ public class EngineManager {
         }
     }
 
-     // NOUVEAU : Rendu synchronisé (reste dans le thread principal)
+    // ✅ Rendu synchronisé (thread principal seulement)
     private void renderSynchronized() {
-        // LE RENDU DOIT RESTER DANS LE THREAD PRINCIPAL !
-        // Mais on utilise les verrous pour accéder aux données en sécurité
-
         // 1. Clear une seule fois au début
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
         // 2. Rendre le background avec protection
         threadManager.withBackgroundLock(() -> {
-            background.render();
+            try {
+                background.render();
+            } catch (Exception e) {
+                System.err.println("❌ Erreur rendu background: " + e.getMessage());
+            }
         });
 
-        // 3. Rendre le jeu avec protection
+        // 3. Rendre les plateformes
+        threadManager.withPlatformLock(() -> { // ✅ Nouveau verrou
+            try {
+                platforms.render();
+            } catch (Exception e) {
+                System.err.println("❌ Erreur rendu plateformes: " + e.getMessage());
+            }
+        });
+
+        // 4. Rendre le jeu avec protection
         threadManager.withPlayerLock(() -> {
-            gameLogic.render();
+            try {
+                gameLogic.render();
+            } catch (Exception e) {
+                System.err.println("❌ Erreur rendu joueur: " + e.getMessage());
+            }
         });
 
-        // 4. Mettre à jour l'affichage
+        // 5. Mettre à jour l'affichage
         window.update();
     }
 
@@ -170,7 +185,6 @@ public class EngineManager {
     }
 
     public void cleanup() {
-
         // Arrêter les threads AVANT le cleanup OpenGL
         if (threadManager != null) {
             threadManager.shutdown();
@@ -179,6 +193,7 @@ public class EngineManager {
         window.cleanup();
         background.cleanup();
         gameLogic.cleanup();
+        platforms.cleanup(); // ✅ Ajouté
         errorCallback.free();
         GLFW.glfwTerminate();
     }
@@ -189,5 +204,10 @@ public class EngineManager {
 
     public static void setFps(int fps) {
         EngineManager.fps = fps;
+    }
+
+    // ✅ Getter pour accéder aux plateformes depuis d'autres classes
+    public static PlatformManager getPlatforms() {
+        return platforms;
     }
 }

@@ -103,9 +103,32 @@ public class ThreadManager {
         }
     }
 
-    /**
-     * ✅ Accès sécurisé aux données du background pour le rendu
-     */
+
+    // ✅ Accès sécurisé aux données des plateformes pour le rendu
+
+    public void withPlatformLock(Runnable renderTask) {
+        boolean lockAcquired = false;
+        try {
+            lockAcquired = platformLock.tryLock(TASK_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            if (lockAcquired) {
+                renderTask.run();
+            } else {
+                System.out.println("⚠️ Timeout sur platformLock (rendu)");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            System.err.println("❌ Erreur dans withPlatformLock: " + e.getMessage());
+        } finally {
+            if (lockAcquired) {
+                platformLock.unlock();
+            }
+        }
+    }
+
+
+    //  ✅ Accès sécurisé aux données du background pour le rendu
+
     public void withBackgroundLock(Runnable renderTask) {
         boolean lockAcquired = false;
         try {
@@ -126,9 +149,9 @@ public class ThreadManager {
         }
     }
 
-    /**
-     * ✅ Arrêt propre avec timeout
-     */
+
+    // ✅ Arrêt propre avec timeout
+
     public void shutdown() {
         running = false;
 

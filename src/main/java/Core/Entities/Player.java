@@ -1,7 +1,7 @@
 package Core.Entities;
 
 import Core.ObjectLoader;
-import Core.World.WorldManager;
+import Core.World.PlatformManager;
 import org.joml.Vector3f;
 
 public class Player {
@@ -34,7 +34,7 @@ public class Player {
     private final Object positionLock = new Object();
     private final Object animationLock = new Object();
     private final Object inputLock = new Object();
-    private WorldManager worldManager;
+    private PlatformManager platforms;
 
     public Player(Model model) { // ✅ Plus besoin de passer le loader
         this.model = model;
@@ -98,9 +98,9 @@ public class Player {
 
 
         // ✅ Collision avec les plateformes
-        if (worldManager != null) {
+        if (platforms != null) {
             Vector3f playerSize = new Vector3f(0.8f, 1.2f, 0.1f); // Taille du joueur
-            Platform platformBelow = worldManager.findPlatformBelow(position, playerSize);
+            Platform platformBelow = platforms.findPlatformBelow(position, playerSize);
 
             if (platformBelow != null && velocity.y <= 0) {
                 float platformTop = platformBelow.getTop();
@@ -117,7 +117,7 @@ public class Player {
             position.y = GROUND_LEVEL;
             velocity.y = 0.0f;
             isOnGround = true;
-        } else if (worldManager == null || worldManager.findPlatformBelow(position, new Vector3f(0.8f, 1.2f, 0.1f)) == null) {
+        } else if (platforms == null || platforms.findPlatformBelow(position, new Vector3f(0.8f, 1.2f, 0.1f)) == null) {
             isOnGround = false;
         }
 
@@ -234,7 +234,7 @@ public class Player {
         return model;
     }
 
-    public void setWorldManager(WorldManager worldManager) {
-        this.worldManager = worldManager;
+    public void setWorldManager(PlatformManager PlatformManager) {
+        this.platforms = PlatformManager;
     }
 }
