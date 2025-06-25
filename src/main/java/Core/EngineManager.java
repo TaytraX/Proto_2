@@ -113,6 +113,13 @@ public class EngineManager {
                     } catch (Exception e) {
                         System.err.println("❌ Erreur logique background: " + e.getMessage());
                     }
+                },
+                () -> {
+                    try {
+                        background.update();
+                    } catch (Exception e) {
+                        System.err.println("❌ Erreur logique background: " + e.getMessage());
+                    }
                 }
         );
 

@@ -27,13 +27,9 @@ public class ObjectLoader {
     public ObjectLoader() {} // Constructeur privé
 
     // ✅ Singleton thread-safe avec double-checked locking
-    public static ObjectLoader getInstance() {
+    public static synchronized ObjectLoader getInstance() {
         if (instance == null) {
-            synchronized (ObjectLoader.class) {
-                if (instance == null) {
-                    instance = new ObjectLoader();
-                }
-            }
+            instance = new ObjectLoader();
         }
         return instance;
     }

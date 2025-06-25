@@ -2,6 +2,7 @@
 package Core.World;
 
 import Core.Entities.Platform;
+import Core.Ilogic;
 import Core.RenderManager;
 import org.joml.Vector3f;
 

@@ -1,6 +1,7 @@
 // src/main/java/Core/Entities/Platform.java
 package Core.Entities;
 
+import Core.Ilogic;
 import org.joml.Vector3f;
 
 public class Platform {

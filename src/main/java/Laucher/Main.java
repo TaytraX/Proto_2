@@ -4,6 +4,7 @@ import Core.EngineManager;
 import Core.Utils.Consts;
 import Render.GameBackground;
 import Render.Window;
+import Core.World.PlatformGenerator;
 import org.lwjgl.Version;
 
 public class Main {
@@ -11,6 +12,7 @@ public class Main {
     private volatile static Window window;
     private static TestGame game;
     private static GameBackground background;
+    private static PlatformGenerator platforms;
 
     public static void main(String[] args) {
 
@@ -19,6 +21,7 @@ public class Main {
         window = new Window(Consts.TITLE + "Initializing...", 1200, 800, false);
         game = new TestGame();
         background = new GameBackground();
+        platforms = new PlatformGenerator();
         EngineManager engine = new EngineManager();
 
         try{
@@ -38,5 +41,9 @@ public class Main {
 
     public static GameBackground getBackground() {
         return background;
+    }
+
+    public static PlatformGenerator getPlatforms() {
+        return platforms;
     }
 }
