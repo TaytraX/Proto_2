@@ -1,5 +1,6 @@
 package Core.World;
 
+import Core.Entities.Camera;
 import Core.Entities.Model;
 import Core.Entities.Platform;
 import Core.Entities.Texture;
@@ -93,19 +94,20 @@ public class PlatformManager {
     }
 
     // Dans PlatformManager.createInitialPlatforms()
+    // Dans PlatformManager.createInitialPlatforms() - CORRIGER les positions
     private void createInitialPlatforms() {
-        // ✅ Plateformes SOUS le niveau du sol (-0.4f)
-        Vector3f pos1 = new Vector3f(1.5f, -0.6f, 0.0f);  // Plus basse
+        // ✅ Plateformes ACCESSIBLES depuis le sol (-0.4f)
+        Vector3f pos1 = new Vector3f(1.5f, -0.1f, 0.0f);  // Plus haute que le sol
         Vector3f size1 = new Vector3f(1.5f, 0.3f, 0.1f);
         Model model1 = createPlatformModel(size1);
         platforms.add(new Platform(pos1, model1));
 
-        Vector3f pos2 = new Vector3f(3.5f, -0.5f, 0.0f);  // Plus basse
+        Vector3f pos2 = new Vector3f(3.5f, 0.1f, 0.0f);   // Encore plus haute
         Vector3f size2 = new Vector3f(1.2f, 0.3f, 0.1f);
         Model model2 = createPlatformModel(size2);
         platforms.add(new Platform(pos2, model2));
 
-        Vector3f pos3 = new Vector3f(6.0f, -0.7f, 0.0f);  // Plus basse
+        Vector3f pos3 = new Vector3f(6.0f, -0.1f, 0.0f);  // Légèrement au-dessus du sol
         Vector3f size3 = new Vector3f(1.0f, 0.3f, 0.1f);
         Model model3 = createPlatformModel(size3);
         platforms.add(new Platform(pos3, model3));
@@ -170,29 +172,20 @@ public class PlatformManager {
         return closestPlatform;
     }
 
-    public void render() {
+    // Dans PlatformManager.java - Ajouter la caméra au rendu
+    public void render(Camera camera) {
         if (platforms.isEmpty()) {
             System.err.println("❌ Aucune plateforme à rendre !");
             return;
         }
 
-        System.out.println("🔨 Rendu de " + platforms.size() + " plateformes");
-
         for (Platform platform : platforms) {
             Vector3f position = platform.getPosition();
-
-            // ✅ Vérifier si la plateforme est dans une zone visible
-            if (position.x < -5.0f || position.x > 20.0f) {
-                System.out.println("⚠️ Plateforme hors champ visuel: X=" + position.x);
-                continue;
-            }
-
             Model model = platform.getModel();
-            if (model != null && renderer != null) {
-                System.out.println("🎯 Rendu plateforme visible à: X=" +
-                        String.format("%.2f", position.x) + " Y=" +
-                        String.format("%.2f", position.y));
-                renderer.render(model, position);
+
+            if (model != null && renderer != null && camera != null) {
+                // ✅ Passer la caméra
+                renderer.render(model, position, camera);
             }
         }
     }

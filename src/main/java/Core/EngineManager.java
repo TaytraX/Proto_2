@@ -1,5 +1,6 @@
 package Core;
 
+import Core.Entities.Camera;
 import Core.World.PlatformManager;
 import Laucher.Main;
 import Laucher.TestGame;
@@ -26,6 +27,7 @@ public class EngineManager {
     private GLFWErrorCallback errorCallback;
     private Ilogic gameLogic, background;
     private static PlatformManager platforms; // ✅ Changé en PlatformManager
+    Camera camera;
 
     private ThreadManager threadManager;
 
@@ -120,7 +122,7 @@ public class EngineManager {
         threadManager.withReadLock(() -> {
             try {
                 background.render();      // ✅ Arrière-plan (Z=0.9)
-                platforms.render();       // ✅ Plateformes (Z=-0.1)
+                platforms.render(camera);       // ✅ Plateformes (Z=-0.1)
                 gameLogic.render();
             } catch (Exception e) {
                 System.err.println("❌ Erreur render: " + e.getMessage());

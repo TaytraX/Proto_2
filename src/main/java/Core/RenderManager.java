@@ -1,5 +1,6 @@
 package Core;
 
+import Core.Entities.Camera;
 import Core.Entities.Model;
 import Core.Utils.Utils;
 import Laucher.Main;
@@ -30,20 +31,26 @@ public class RenderManager {
 
         shader.createUniform("textureSample");
         shader.createUniform("transformationMatrix");
+        // ✅ AJOUTER ces uniforms pour la caméra
+        shader.createUniform("viewMatrix");
+        shader.createUniform("projectionMatrix");
     }
 
-    public void render(Model model, Vector3f position) {
+    public void render(Model model, Vector3f position, Camera camera) {
         if (model == null) {
             System.err.println("❌ Tentative de rendu d'un modèle null !");
             return;
         }
 
-        // ✅ CORRECTION: NE PAS appeler clear() ici pour préserver le background
-        // clear(); // <-- SUPPRIMÉ
-
         shader.bind();
 
-        // Créer et appliquer la matrice de transformation
+        // ✅ Utiliser les matrices de la caméra
+        if (camera != null) {
+            shader.setUniform("viewMatrix", camera.getViewMatrix());
+            shader.setUniform("projectionMatrix", camera.getProjectionMatrix());
+        }
+
+        // Matrice de transformation locale
         Matrix4f transformationMatrix = new Matrix4f().identity();
         transformationMatrix.translate(position);
         shader.setUniform("transformationMatrix", transformationMatrix);

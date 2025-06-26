@@ -62,11 +62,11 @@ public class PlatformGenerator {
         return platforms;
     }
 
-    // Dans PlatformGenerator.calculateNextPosition()
+    // Dans PlatformGenerator.calculateNextPosition() - CORRIGER les hauteurs
     private Vector3f calculateNextPosition(Vector3f currentPos) {
-        float nextX = currentPos.x + 1.5f + random.nextFloat() * 1.0f;
-        // ✅ Plateformes plus basses pour être accessibles
-        float nextY = -0.8f + random.nextFloat() * 0.4f; // Entre -0.8 et -0.4
+        float nextX = currentPos.x + 1.5f + random.nextFloat();
+        // ✅ Plateformes ACCESSIBLES (au-dessus ou au niveau du sol)
+        float nextY = -0.3f + random.nextFloat() * 0.6f; // Entre -0.3 et +0.3
         return new Vector3f(nextX, nextY, 0.0f);
     }
 

@@ -165,40 +165,24 @@ public class TestGame implements Ilogic {
     }
 
     // ✅ Méthode séparée pour le rendu du joueur
+    // Dans TestGame.java - Modifier les méthodes de rendu
     private void renderPlayer() {
-        if (player == null) {
-            System.err.println("❌ Joueur null !");
-            return;
-        }
+        if (player == null || camera == null) return;
 
         Model playerModel = player.getModel();
-        if (playerModel == null) {
-            System.err.println("❌ Modèle du joueur null !");
-            return;
-        }
+        if (playerModel == null) return;
 
         if (playerModel.getTexture() != null) {
-            renderer.render(playerModel, player.getPosition());
-
-            // ✅ Debug occasionnel (moins verbeux)
-            if (Math.random() < 0.005) { // 0.5% de chance
-                System.out.println("🎮 Position joueur: " +
-                        String.format("X:%.2f Y:%.2f Z:%.2f",
-                                player.getPosition().x,
-                                player.getPosition().y,
-                                player.getPosition().z));
-            }
-        } else {
-            System.out.println("⚠️ Rendu sans texture");
+            // ✅ Passer la caméra au renderer
+            renderer.render(playerModel, player.getPosition(), camera);
         }
     }
 
-    // Dans TestGame.render() - Vérifier l'ordre
     private void renderWorld() {
-        if (platforms != null) {
+        if (platforms != null && camera != null) {
             try {
-                // ✅ S'assurer que les plateformes sont à la bonne profondeur
-                platforms.render();
+                // ✅ Les plateformes devront aussi recevoir la caméra
+                platforms.render(camera);
             } catch (Exception e) {
                 System.err.println("❌ Erreur rendu monde: " + e.getMessage());
             }
