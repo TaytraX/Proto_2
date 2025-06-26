@@ -10,7 +10,7 @@ import org.lwjgl.Version;
 public class Main {
 
     private volatile static Window window;
-    private static TestGame game;
+    public static TestGame game;
     private static GameBackground background;
     private static PlatformGenerator platforms;
 

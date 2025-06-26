@@ -2,8 +2,9 @@ package Core.World;
 
 import Core.Entities.Model;
 import Core.Entities.Platform;
-import Core.Ilogic;
+import Laucher.TestGame;
 import Core.ObjectLoader;
+import Core.RenderManager;
 import org.joml.Vector3f;
 
 import java.util.List;
@@ -125,10 +126,29 @@ public class PlatformManager {
     }
 
     public void render() {
+        // Obtenir le renderer depuis EngineManager ou l'injecter
+        RenderManager renderer = getRenderManager(); // À implémenter
+
         for (Platform platform : platforms) {
-            // Utiliser le RenderManager pour rendre chaque plateforme
-            // Vous devrez adapter selon votre système de rendu
+            try {
+                Vector3f position = platform.getPosition();
+                Model model = platform.getModel();
+
+                if (model != null && model.getTexture() != null) {
+                    renderer.render(model, position);
+                }
+            } catch (Exception e) {
+                System.err.println("❌ Erreur rendu plateforme: " + e.getMessage());
+            }
         }
+    }
+
+    // Méthode à ajouter pour obtenir le renderer
+    private RenderManager getRenderManager() {
+        // Option 1: Injecter le renderer dans le constructeur
+        // Option 2: Utiliser un singleton comme ObjectLoader
+        // Option 3: Passer via EngineManager
+        return TestGame.getRenderer(); // À implémenter dans TestGame
     }
 
     private void cleanupDistantPlatforms(Vector3f playerPos) {

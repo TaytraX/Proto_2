@@ -13,6 +13,8 @@ import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
+import static Laucher.Main.game;
+
 public class TestGame implements Ilogic {
 
     private final RenderManager renderer;
@@ -59,7 +61,7 @@ public class TestGame implements Ilogic {
         // ✅ Création du modèle avec le loader singleton
         Model model = loader.loadModel(vertices, textureCoords, indices);
         player = new Player(model); // ✅ Plus besoin de passer le loader
-        player.setWorldManager(platforms);
+        player.setPlatformManager(platforms);
 
         // ✅ Chargement de la texture initiale avec gestion d'erreur
         initializePlayerTexture(model);
@@ -203,5 +205,9 @@ public class TestGame implements Ilogic {
         } catch (Exception e) {
             System.err.println("❌ Erreur dans cleanup(): " + e.getMessage());
         }
+    }
+
+    public static RenderManager getRenderer() {
+        return game != null ? game.renderer : null;
     }
 }

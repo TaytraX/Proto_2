@@ -234,10 +234,6 @@ public class Player {
         return model;
     }
 
-    public void setWorldManager(PlatformManager PlatformManager) {
-        this.platforms = PlatformManager;
-    }
-
     public void setPlatformManager(PlatformManager platformManager) {
         this.platforms = platformManager;
         System.out.println("✅ PlatformManager lié au joueur");

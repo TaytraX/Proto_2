@@ -2,6 +2,7 @@ package Core;
 
 import Core.World.PlatformManager;
 import Laucher.Main;
+import Laucher.TestGame;
 import Render.Window;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -49,6 +50,10 @@ public class EngineManager {
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthFunc(GL11.GL_LEQUAL);
         GL11.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+        if (gameLogic instanceof TestGame) {
+            // Cette liaison devrait être faite dans TestGame.inits()
+        }
     }
 
     public void start() throws Exception {

@@ -44,45 +44,61 @@ public class ThreadManager {
         });
     }
 
-    public Future<?> updateAllLogic(Runnable playerTask, Runnable backgroundTask, Runnable platformTask) {
+    public Future<?> updateAllLogic(Runnable playerTask, Runnable platformTask, Runnable backgroundTask) {
         return gameLogicExecutor.submit(() -> {
             if (!running) return;
 
+            long startTime = System.nanoTime();
+
             try {
-                // Exécuter les deux tâches séquentiellement dans le même thread
+                // 1. Joueur en premier (plus critique)
                 if (playerLock.tryLock(TASK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
                     try {
                         playerTask.run();
                     } finally {
                         playerLock.unlock();
                     }
+                } else {
+                    System.out.println("⚠️ Timeout playerTask - frame skippée");
                 }
 
+                // 2. Plateformes (dépendent du joueur)
                 if (platformLock.tryLock(TASK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
                     try {
                         platformTask.run();
                     } finally {
                         platformLock.unlock();
                     }
+                } else {
+                    System.out.println("⚠️ Timeout platformTask - frame skippée");
                 }
 
-                if (backgroundLock.tryLock(TASK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                // 3. Background (moins critique)
+                if (backgroundLock.tryLock(TASK_TIMEOUT_MS / 2, TimeUnit.MILLISECONDS)) {
                     try {
                         backgroundTask.run();
                     } finally {
                         backgroundLock.unlock();
                     }
                 }
+
+                // Mesurer performance
+                long duration = System.nanoTime() - startTime;
+                if (duration > 10_000_000) { // Plus de 10ms
+                    System.out.println("⚠️ Logique lente: " + (duration / 1_000_000) + "ms");
+                }
+
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                System.out.println("🔄 Thread logique interrompu");
+            } catch (Exception e) {
+                System.err.println("❌ Erreur critique dans updateAllLogic: " + e.getMessage());
             }
         });
     }
 
+     // ✅ Accès sécurisé aux données du joueur pour le rendu
 
-    /**
-     * ✅ Accès sécurisé aux données du joueur pour le rendu
-     */
     public void withPlayerLock(Runnable renderTask) {
         boolean lockAcquired = false;
         try {
