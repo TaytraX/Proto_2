@@ -145,6 +145,7 @@ public class Player {
         }
     }
 
+    // Dans Player.handlePlatformCollisions()
     private void handlePlatformCollisions(Vector3f newPosition) {
         if (platforms == null) {
             position.set(newPosition);
@@ -154,7 +155,7 @@ public class Player {
 
         Vector3f playerSize = new Vector3f(0.8f, 1.2f, 0.1f);
 
-        // ✅ Collision platforme uniquement quand on tombe
+        // ✅ Collision seulement quand on tombe
         if (velocity.y <= 0) {
             Platform platformBelow = platforms.findPlatformBelow(newPosition, playerSize);
 
@@ -165,29 +166,22 @@ public class Player {
                 float platformTop = platPos.y + platSize.y/2;
                 float playerBottom = newPosition.y - playerSize.y/2;
 
-                System.out.println("🔍 COLLISION CHECK:");
-                System.out.println("   Plateforme: X=" + String.format("%.2f", platPos.x) +
-                        " Y=" + String.format("%.2f", platPos.y) +
-                        " Top=" + String.format("%.2f", platformTop));
-                System.out.println("   Joueur: X=" + String.format("%.2f", newPosition.x) +
-                        " Y=" + String.format("%.2f", newPosition.y) +
-                        " Bottom=" + String.format("%.2f", playerBottom));
-                System.out.println("   Vélocité Y: " + String.format("%.3f", velocity.y));
+                // ✅ Distance de tolérance plus grande
+                float tolerance = 0.1f;
 
-                // ✅ Si le joueur "atterrit" sur la plateforme
-                if (playerBottom <= platformTop + 0.05f && playerBottom >= platformTop - 0.2f) {
-                    position.x = newPosition.x; // ✅ Mouvement horizontal OK
-                    position.y = platformTop + playerSize.y/2; // ✅ Poser sur la plateforme
+                if (Math.abs(playerBottom - platformTop) <= tolerance) {
+                    position.x = newPosition.x;
+                    position.y = platformTop + playerSize.y/2;
                     velocity.y = 0.0f;
                     isOnGround = true;
 
-                    System.out.println("🎯 Atterrissage sur plateforme à Y=" + platformTop);
+                    System.out.println("🎯 Collision détectée ! Joueur posé sur plateforme");
                     return;
                 }
             }
         }
 
-        // ✅ Pas de collision de plateforme - mouvement normal
+        // Mouvement normal
         position.set(newPosition);
         handleGroundCollision();
     }

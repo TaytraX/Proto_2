@@ -64,9 +64,9 @@ public class PlatformGenerator {
 
     // Dans PlatformGenerator.calculateNextPosition()
     private Vector3f calculateNextPosition(Vector3f currentPos) {
-        // ✅ Espacement plus raisonnable et positions visibles
-        float nextX = currentPos.x + 1.5f + random.nextFloat() * 1.0f; // Entre 1.5 et 2.5 unités
-        float nextY = -0.4f + random.nextFloat() * 0.6f; // Entre -0.4 et 0.2
+        float nextX = currentPos.x + 1.5f + random.nextFloat() * 1.0f;
+        // ✅ Plateformes plus basses pour être accessibles
+        float nextY = -0.8f + random.nextFloat() * 0.4f; // Entre -0.8 et -0.4
         return new Vector3f(nextX, nextY, 0.0f);
     }
 

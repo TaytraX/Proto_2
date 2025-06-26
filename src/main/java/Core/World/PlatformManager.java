@@ -92,29 +92,26 @@ public class PlatformManager {
         }
     }
 
+    // Dans PlatformManager.createInitialPlatforms()
     private void createInitialPlatforms() {
-        // ✅ Plateformes visibles dès le début
-        Vector3f pos1 = new Vector3f(1.5f, -0.2f, 0.0f);  // Proche du joueur (spawn à X=0)
+        // ✅ Plateformes SOUS le niveau du sol (-0.4f)
+        Vector3f pos1 = new Vector3f(1.5f, -0.6f, 0.0f);  // Plus basse
         Vector3f size1 = new Vector3f(1.5f, 0.3f, 0.1f);
         Model model1 = createPlatformModel(size1);
         platforms.add(new Platform(pos1, model1));
 
-        Vector3f pos2 = new Vector3f(3.5f, 0.1f, 0.0f);   // Deuxième plateforme
+        Vector3f pos2 = new Vector3f(3.5f, -0.5f, 0.0f);  // Plus basse
         Vector3f size2 = new Vector3f(1.2f, 0.3f, 0.1f);
         Model model2 = createPlatformModel(size2);
         platforms.add(new Platform(pos2, model2));
 
-        Vector3f pos3 = new Vector3f(6.0f, -0.1f, 0.0f);  // Troisième plateforme
+        Vector3f pos3 = new Vector3f(6.0f, -0.7f, 0.0f);  // Plus basse
         Vector3f size3 = new Vector3f(1.0f, 0.3f, 0.1f);
         Model model3 = createPlatformModel(size3);
         platforms.add(new Platform(pos3, model3));
 
-        lastGeneratedX = 7.0f; // ✅ Mettre à jour correctement
-
+        lastGeneratedX = 7.0f;
         System.out.println("✅ " + platforms.size() + " plateformes initiales créées");
-        for (Platform p : platforms) {
-            System.out.println("   - Plateforme à: " + p.getPosition());
-        }
     }
 
     private Model createPlatformModel(Vector3f size) {
