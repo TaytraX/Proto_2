@@ -31,4 +31,12 @@ public class Platform {
 
     // Pour le debug
     public float getTop() { return position.y + size.y/2; }
+
+    // ✅ Ajouter dans Platform.java
+    // Dans Platform.java - Ajouter cette méthode manquante
+    public Vector3f getSize() {
+        synchronized (platformLock) {
+            return new Vector3f(size);
+        }
+    }
 }

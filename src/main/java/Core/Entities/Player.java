@@ -66,10 +66,17 @@ public class Player {
 
     // ✅ Dans Player.java - optimisation des verrous
     public void update() {
-        // Une seule synchronisation au lieu de plusieurs
         synchronized (this) {
             Vector3f oldPosition = new Vector3f(position);
             updateMovement();
+
+            // ✅ Debug pour voir les collisions
+            if (Math.random() < 0.01) { // 1% du temps
+                System.out.println("🎮 Joueur: X=" + String.format("%.2f", position.x) +
+                        " Y=" + String.format("%.2f", position.y) +
+                        " Au sol: " + isOnGround +
+                        " Vélocité Y: " + String.format("%.3f", velocity.y));
+            }
 
             if (!oldPosition.equals(position)) {
                 updateAnimations();
@@ -146,42 +153,34 @@ public class Player {
         }
 
         Vector3f playerSize = new Vector3f(0.8f, 1.2f, 0.1f);
-        boolean collisionDetected = false;
 
-        // ✅ Collision verticale (chute)
+        // ✅ Collision platforme uniquement quand on tombe
         if (velocity.y <= 0) {
             Platform platformBelow = platforms.findPlatformBelow(newPosition, playerSize);
+
             if (platformBelow != null) {
-                float platformTop = platformBelow.getTop();
+                Vector3f platPos = platformBelow.getPosition();
+                Vector3f platSize = platformBelow.getSize();
+
+                float platformTop = platPos.y + platSize.y/2;
                 float playerBottom = newPosition.y - playerSize.y/2;
 
-                // ✅ Vérification avec tolérance pour éviter le clipping
-                if (playerBottom <= platformTop + 0.05f && playerBottom >= platformTop - 0.1f) {
-                    position.y = platformTop + playerSize.y/2;
-                    position.x = newPosition.x; // Appliquer mouvement horizontal
+                // ✅ Si le joueur "atterrit" sur la plateforme
+                if (playerBottom <= platformTop + 0.05f && playerBottom >= platformTop - 0.2f) {
+                    position.x = newPosition.x; // ✅ Mouvement horizontal OK
+                    position.y = platformTop + playerSize.y/2; // ✅ Poser sur la plateforme
                     velocity.y = 0.0f;
                     isOnGround = true;
-                    collisionDetected = true;
+
+                    System.out.println("🎯 Atterrissage sur plateforme à Y=" + platformTop);
+                    return;
                 }
             }
         }
 
-        // ✅ Collision horizontale si pas de collision verticale
-        if (!collisionDetected) {
-            Platform platformSide = platforms.findPlatformSide(newPosition, playerSize);
-            if (platformSide != null) {
-                // Bloquer le mouvement horizontal mais permettre le vertical
-                position.y = newPosition.y;
-                velocity.x = 0.0f;
-                collisionDetected = true;
-            }
-        }
-
-        // ✅ Pas de collision avec plateformes
-        if (!collisionDetected) {
-            position.set(newPosition);
-            handleGroundCollision();
-        }
+        // ✅ Pas de collision de plateforme - mouvement normal
+        position.set(newPosition);
+        handleGroundCollision();
     }
 
     private void updateAnimationState() {

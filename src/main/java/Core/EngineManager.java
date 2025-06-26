@@ -143,8 +143,7 @@ public class EngineManager {
 
         window.cleanup();
         background.cleanup();
-        gameLogic.cleanup();
-        platforms.cleanup(); // ✅ Ajouté
+        gameLogic.cleanup(); // ✅ Ajouté
         errorCallback.free();
         GLFW.glfwTerminate();
     }

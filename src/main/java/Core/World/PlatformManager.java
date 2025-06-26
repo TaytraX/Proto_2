@@ -97,15 +97,16 @@ public class PlatformManager {
         lastGeneratedX = 5.0f;
     }
 
+    // Dans PlatformManager.createPlatformModel()
     private Model createPlatformModel(Vector3f size) {
         float halfX = size.x / 2;
         float halfY = size.y / 2;
 
         float[] vertices = {
-                -halfX, -halfY, 0.5f,  // ✅ Z=0.5 (entre background et joueur)
-                halfX, -halfY, 0.5f,
-                halfX,  halfY, 0.5f,
-                -halfX,  halfY, 0.5f
+                -halfX, -halfY, 0.1f,  // ✅ Z=0.1 (derrière le joueur)
+                halfX, -halfY, 0.1f,
+                halfX,  halfY, 0.1f,
+                -halfX,  halfY, 0.1f
         };
 
         int[] indices = {0, 1, 2, 2, 3, 0};
@@ -116,24 +117,22 @@ public class PlatformManager {
 
     // ✅ Méthode cruciale manquante
     public Platform findPlatformBelow(Vector3f playerPos, Vector3f playerSize) {
-
-        String playerGrid = getGridKey(playerPos);
-        List<Platform> nearbyPlatforms = spatialGrid.getOrDefault(playerGrid, platforms);
-
         Platform closestPlatform = null;
         float closestDistance = Float.MAX_VALUE;
 
         for (Platform platform : platforms) {
             Vector3f platPos = platform.getPosition();
+            Vector3f platSize = platform.getSize(); // ✅ Maintenant disponible
 
-            // Vérifier si le joueur est horizontalement au-dessus
+            // Vérifier si le joueur est horizontalement au-dessus de la plateforme
             boolean horizontallyAligned =
-                    playerPos.x + playerSize.x/2 >= platPos.x - platSize.x/2 &&
-                            playerPos.x - playerSize.x/2 <= platPos.x + platSize.x/2;
+                    playerPos.x + playerSize.x/2 > platPos.x - platSize.x/2 &&
+                            playerPos.x - playerSize.x/2 < platPos.x + platSize.x/2;
 
+            // La plateforme doit être en dessous du joueur
             if (horizontallyAligned && platPos.y < playerPos.y) {
                 float distance = playerPos.y - platPos.y;
-                if (distance < closestDistance) {
+                if (distance < closestDistance && distance < 1.0f) { // ✅ Distance max
                     closestDistance = distance;
                     closestPlatform = platform;
                 }
@@ -165,52 +164,6 @@ public class PlatformManager {
         }
     }
 
-    // Méthode à ajouter pour obtenir le renderer
-    private RenderManager getRenderManager() {
-        // Option 1: Injecter le renderer dans le constructeur
-        // Option 2: Utiliser un singleton comme ObjectLoader
-        // Option 3: Passer via EngineManager
-        return TestGame.getRenderer(); // À implémenter dans TestGame
-    }
-
-    // Dans PlatformManager.java - Méthode findPlatformSide ajoutée
-    public Platform findPlatformSide(Vector3f playerPos, Vector3f playerSize) {
-        for (Platform platform : platforms) {
-            Vector3f platPos = platform.getPosition();
-            Vector3f platSize = platform.getSize();
-
-            // Vérifier collision horizontale
-            boolean verticalOverlap =
-                    playerPos.y + playerSize.y/2 > platPos.y - platSize.y/2 &&
-                            playerPos.y - playerSize.y/2 < platPos.y + platSize.y/2;
-
-            if (verticalOverlap) {
-                // Collision à gauche ou à droite
-                if ((playerPos.x - playerSize.x/2 <= platPos.x + platSize.x/2 &&
-                        playerPos.x + playerSize.x/2 >= platPos.x + platSize.x/2) ||
-                        (playerPos.x + playerSize.x/2 >= platPos.x - platSize.x/2 &&
-                                playerPos.x - playerSize.x/2 <= platPos.x - platSize.x/2)) {
-                    return platform;
-                }
-            }
-        }
-        return null;
-    }
-
-    // ✅ Optimisation avec cache pour éviter les recalculs
-    private final Map<Platform, BoundingBox> boundingBoxCache = new ConcurrentHashMap<>();
-
-    private static class BoundingBox {
-        final float minX, maxX, minY, maxY;
-
-        BoundingBox(Vector3f pos, Vector3f size) {
-            minX = pos.x - size.x/2;
-            maxX = pos.x + size.x/2;
-            minY = pos.y - size.y/2;
-            maxY = pos.y + size.y/2;
-        }
-    }
-
     private void cleanupDistantPlatforms(Vector3f playerPos) {
         platforms.removeIf(platform -> {
             float distance = Math.abs(platform.getPosition().x - playerPos.x);
@@ -220,8 +173,5 @@ public class PlatformManager {
 
     private boolean shouldGenerateMore(Vector3f playerPos) {
         return playerPos.x > lastGeneratedX - GENERATION_DISTANCE;
-    }
-
-    public void cleanup() {
     }
 }
