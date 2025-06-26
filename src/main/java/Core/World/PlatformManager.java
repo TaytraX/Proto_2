@@ -9,6 +9,8 @@ import org.joml.Vector3f;
 import Core.Entities.Platform;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class PlatformManager {
@@ -148,6 +150,44 @@ public class PlatformManager {
         // Option 2: Utiliser un singleton comme ObjectLoader
         // Option 3: Passer via EngineManager
         return TestGame.getRenderer(); // À implémenter dans TestGame
+    }
+
+    // Dans PlatformManager.java - Méthode findPlatformSide ajoutée
+    public Platform findPlatformSide(Vector3f playerPos, Vector3f playerSize) {
+        for (Platform platform : platforms) {
+            Vector3f platPos = platform.getPosition();
+            Vector3f platSize = platform.getSize();
+
+            // Vérifier collision horizontale
+            boolean verticalOverlap =
+                    playerPos.y + playerSize.y/2 > platPos.y - platSize.y/2 &&
+                            playerPos.y - playerSize.y/2 < platPos.y + platSize.y/2;
+
+            if (verticalOverlap) {
+                // Collision à gauche ou à droite
+                if ((playerPos.x - playerSize.x/2 <= platPos.x + platSize.x/2 &&
+                        playerPos.x + playerSize.x/2 >= platPos.x + platSize.x/2) ||
+                        (playerPos.x + playerSize.x/2 >= platPos.x - platSize.x/2 &&
+                                playerPos.x - playerSize.x/2 <= platPos.x - platSize.x/2)) {
+                    return platform;
+                }
+            }
+        }
+        return null;
+    }
+
+    // ✅ Optimisation avec cache pour éviter les recalculs
+    private final Map<Platform, BoundingBox> boundingBoxCache = new ConcurrentHashMap<>();
+
+    private static class BoundingBox {
+        final float minX, maxX, minY, maxY;
+
+        BoundingBox(Vector3f pos, Vector3f size) {
+            minX = pos.x - size.x/2;
+            maxX = pos.x + size.x/2;
+            minY = pos.y - size.y/2;
+            maxY = pos.y + size.y/2;
+        }
     }
 
     private void cleanupDistantPlatforms(Vector3f playerPos) {

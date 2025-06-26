@@ -100,69 +100,31 @@ public class EngineManager {
         cleanup();
     }
 
+    // Dans EngineManager.java - Loop de jeu simplifiée
     private void updateParallel() {
-        // ✅ Obtenir la position du joueur depuis gameLogic (TestGame)
-        Future<?> logicTask = threadManager.updateAllLogic(
-                () -> {
-                    try {
-                        gameLogic.update();
-                    } catch (Exception e) {
-                        System.err.println("❌ Erreur logique joueur: " + e.getMessage());
-                    }
-                },
-                () -> {
-                    try {
-                        background.update();
-                    } catch (Exception e) {
-                        System.err.println("❌ Erreur logique background: " + e.getMessage());
-                    }
-                }
-        );
-
-        // Attendre que la logique soit terminée
-        try {
-            logicTask.get(16, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
-            System.err.println("⚠️ Timeout sur la logique de jeu");
-            logicTask.cancel(true);
-        } catch (Exception e) {
-            System.err.println("❌ Erreur dans le thread de logique: " + e.getMessage());
-        }
+        threadManager.withWriteLock(() -> {
+            try {
+                gameLogic.update();
+                background.update();
+            } catch (Exception e) {
+                System.err.println("❌ Erreur update: " + e.getMessage());
+            }
+        });
     }
 
-    // ✅ Rendu synchronisé (thread principal seulement)
     private void renderSynchronized() {
-        // 1. Clear une seule fois au début
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
-        // 2. Rendre le background avec protection
-        threadManager.withBackgroundLock(() -> {
+        threadManager.withReadLock(() -> {
             try {
                 background.render();
-            } catch (Exception e) {
-                System.err.println("❌ Erreur rendu background: " + e.getMessage());
-            }
-        });
-
-        // 3. Rendre les plateformes
-        threadManager.withPlatformLock(() -> { // ✅ Nouveau verrou
-            try {
                 platforms.render();
-            } catch (Exception e) {
-                System.err.println("❌ Erreur rendu plateformes: " + e.getMessage());
-            }
-        });
-
-        // 4. Rendre le jeu avec protection
-        threadManager.withPlayerLock(() -> {
-            try {
                 gameLogic.render();
             } catch (Exception e) {
-                System.err.println("❌ Erreur rendu joueur: " + e.getMessage());
+                System.err.println("❌ Erreur render: " + e.getMessage());
             }
         });
 
-        // 5. Mettre à jour l'affichage
         window.update();
     }
 
@@ -176,10 +138,6 @@ public class EngineManager {
     }
 
     public void cleanup() {
-        // Arrêter les threads AVANT le cleanup OpenGL
-        if (threadManager != null) {
-            threadManager.shutdown();
-        }
 
         window.cleanup();
         background.cleanup();

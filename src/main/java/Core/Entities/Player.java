@@ -150,28 +150,42 @@ public class Player {
         }
 
         Vector3f playerSize = new Vector3f(0.8f, 1.2f, 0.1f);
+        boolean collisionDetected = false;
 
-        // Collision verticale (prioritaire)
-        if (velocity.y <= 0) { // Chute ou stationnaire
+        // ✅ Collision verticale (chute)
+        if (velocity.y <= 0) {
             Platform platformBelow = platforms.findPlatformBelow(newPosition, playerSize);
             if (platformBelow != null) {
                 float platformTop = platformBelow.getTop();
                 float playerBottom = newPosition.y - playerSize.y/2;
 
-                // ✅ Vérification plus précise
-                if (playerBottom <= platformTop && playerBottom >= platformTop - 0.2f) {
+                // ✅ Vérification avec tolérance pour éviter le clipping
+                if (playerBottom <= platformTop + 0.05f && playerBottom >= platformTop - 0.1f) {
                     position.y = platformTop + playerSize.y/2;
+                    position.x = newPosition.x; // Appliquer mouvement horizontal
                     velocity.y = 0.0f;
                     isOnGround = true;
-                    position.x = newPosition.x; // Appliquer mouvement horizontal
-                    return;
+                    collisionDetected = true;
                 }
             }
         }
 
-        // Pas de collision avec plateforme
-        position.set(newPosition);
-        handleGroundCollision();
+        // ✅ Collision horizontale si pas de collision verticale
+        if (!collisionDetected) {
+            Platform platformSide = platforms.findPlatformSide(newPosition, playerSize);
+            if (platformSide != null) {
+                // Bloquer le mouvement horizontal mais permettre le vertical
+                position.y = newPosition.y;
+                velocity.x = 0.0f;
+                collisionDetected = true;
+            }
+        }
+
+        // ✅ Pas de collision avec plateformes
+        if (!collisionDetected) {
+            position.set(newPosition);
+            handleGroundCollision();
+        }
     }
 
     private void updateAnimationState() {

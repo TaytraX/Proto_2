@@ -40,8 +40,8 @@ public class TestGame implements Ilogic {
 
         // ✅ Géométrie du joueur (quad 2D)
         float[] vertices = {
-                -0.4f,  -0.6f,  0.0f,  // Bas gauche
-                -0.4f,   0.6f,  0.0f,  // Haut gauche
+               -0.4f,  -0.6f,  0.0f,  // Bas gauche
+               -0.4f,   0.6f,  0.0f,  // Haut gauche
                 0.4f,   0.6f,  0.0f,  // Haut droit
                 0.4f,  -0.6f,  0.0f   // Bas droit
         };
