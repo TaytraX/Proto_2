@@ -42,8 +42,4 @@ public class Main {
     public static GameBackground getBackground() {
         return background;
     }
-
-    public static PlatformGenerator getPlatforms() {
-        return platforms;
-    }
 }

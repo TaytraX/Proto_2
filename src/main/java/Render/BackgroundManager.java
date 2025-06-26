@@ -65,10 +65,6 @@ public class BackgroundManager {
         shader.unbind();
     }
 
-    public void clear(){
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-    }
-
     public void cleanup() {
         if (shader != null) {
             shader.cleanup();

@@ -6,7 +6,7 @@ import Core.Entities.Texture;
 import Core.Ilogic;
 import Core.ObjectLoader;
 import Core.RenderManager;
-import Core.World.WorldManager;
+import Core.World.PlatformManager;
 import Render.Window;
 
 import org.joml.Vector3f;
@@ -18,7 +18,7 @@ public class TestGame implements Ilogic {
     private final RenderManager renderer;
     private final ObjectLoader loader;
     private final Window window;
-    private volatile WorldManager worldManager;
+    private volatile PlatformManager platforms;
 
     private volatile Player player; // ✅ volatile pour visibilité entre threads
 
@@ -34,7 +34,7 @@ public class TestGame implements Ilogic {
     @Override
     public void inits() throws Exception {
         renderer.init();
-        worldManager = new WorldManager();
+        platforms = new PlatformManager();
 
         // ✅ Géométrie du joueur (quad 2D)
         float[] vertices = {
@@ -59,7 +59,7 @@ public class TestGame implements Ilogic {
         // ✅ Création du modèle avec le loader singleton
         Model model = loader.loadModel(vertices, textureCoords, indices);
         player = new Player(model); // ✅ Plus besoin de passer le loader
-        player.setWorldManager(worldManager);
+        player.setWorldManager(platforms);
 
         // ✅ Chargement de la texture initiale avec gestion d'erreur
         initializePlayerTexture(model);
@@ -116,8 +116,8 @@ public class TestGame implements Ilogic {
                 Vector3f playerPos = player.getPosition(); // ✅ Copie sécurisée
 
                 // Mettre à jour le monde AVANT le joueur
-                if (worldManager != null) {
-                    worldManager.update(playerPos);
+                if (platforms != null) {
+                    platforms.update(playerPos);
                 }
 
                 player.update();
@@ -176,10 +176,10 @@ public class TestGame implements Ilogic {
 
     // Dans TestGame.render() - Vérifier l'ordre
     private void renderWorld() {
-        if (worldManager != null) {
+        if (platforms != null) {
             try {
                 // ✅ S'assurer que les plateformes sont à la bonne profondeur
-                worldManager.render(renderer);
+                platforms.render();
             } catch (Exception e) {
                 System.err.println("❌ Erreur rendu monde: " + e.getMessage());
             }

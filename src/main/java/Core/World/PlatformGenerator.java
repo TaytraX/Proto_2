@@ -61,4 +61,20 @@ public class PlatformGenerator {
 
         return platforms;
     }
+
+    private Vector3f calculateNextPosition(Vector3f currentPos) {
+        float nextX = currentPos.x + random.nextFloat() * 2.0f + 1.0f;
+        float nextY = currentPos.y + (random.nextFloat() - 0.5f) * 0.5f;
+        return new Vector3f(nextX, nextY, 0.0f);
+    }
+
+    private Vector3f calculatePlatformSize() {
+        float width = 0.8f + random.nextFloat() * 0.4f; // 0.8 à 1.2
+        float height = 0.1f + random.nextFloat() * 0.1f; // 0.1 à 0.2
+        return new Vector3f(width, height, 0.1f);
+    }
+
+    public void shutdown() {
+        generatorThread.shutdown();
+    }
 }

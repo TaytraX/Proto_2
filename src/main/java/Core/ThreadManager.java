@@ -177,21 +177,4 @@ public class ThreadManager {
             Thread.currentThread().interrupt();
         }
     }
-
-    // ✅ Méthodes de diagnostic
-    public boolean isRunning() {
-        return running;
-    }
-
-    public boolean isPlayerLockHeld() {
-        return playerLock.isLocked();
-    }
-
-    public boolean isBackgroundLockHeld() {
-        return backgroundLock.isLocked();
-    }
-
-    // Getters pour les verrous (si nécessaire pour debug)
-    public ReentrantLock getPlayerLock() { return playerLock; }
-    public ReentrantLock getBackgroundLock() { return backgroundLock; }
 }
