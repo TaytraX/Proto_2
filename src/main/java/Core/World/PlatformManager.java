@@ -173,9 +173,6 @@ public class PlatformManager {
         return closestPlatform;
     }
 
-    // Dans PlatformManager.render()
-    // Dans PlatformManager.render()
-    // Dans PlatformManager.render()
     public void render() {
         if (platforms.isEmpty()) {
             System.err.println("❌ Aucune plateforme à rendre !");

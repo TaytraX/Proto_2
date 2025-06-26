@@ -1,5 +1,6 @@
 package Laucher;
 
+import Core.Entities.Camera;
 import Core.Entities.Model;
 import Core.Entities.Player;
 import Core.Entities.Texture;
@@ -21,6 +22,7 @@ public class TestGame implements Ilogic {
     private final ObjectLoader loader;
     private final Window window;
     private volatile PlatformManager platforms;
+    private Camera camera;
 
     private volatile Player player; // ✅ volatile pour visibilité entre threads
 
@@ -36,6 +38,9 @@ public class TestGame implements Ilogic {
     @Override
     public void inits() throws Exception {
         renderer.init();
+        float aspectRatio = (float) window.getWidth() / window.getHeight();
+        camera = new Camera(aspectRatio);
+
         platforms = new PlatformManager(TestGame.getRenderer());
 
         // ✅ Géométrie du joueur (quad 2D)
@@ -115,9 +120,13 @@ public class TestGame implements Ilogic {
     public void update() {
         if (player != null) {
             try {
-                Vector3f playerPos = player.getPosition(); // ✅ Copie sécurisée
+                Vector3f playerPos = player.getPosition();
 
-                // Mettre à jour le monde AVANT le joueur
+                // ✅ Mettre à jour la caméra pour suivre le joueur
+                if (camera != null) {
+                    camera.update(playerPos);
+                }
+
                 if (platforms != null) {
                     platforms.update(playerPos);
                 }
@@ -134,12 +143,20 @@ public class TestGame implements Ilogic {
         try {
             if (window.isResize()) {
                 GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
+
+                // ✅ Mettre à jour l'aspect ratio de la caméra
+                float newAspectRatio = (float) window.getWidth() / window.getHeight();
+                if (camera != null) {
+                    camera.setAspectRatio(newAspectRatio);
+                }
+
                 window.setResize(false);
             }
 
             synchronized (renderLock) {
-                renderWorld();    // ✅ Rendre les plateformes d'abord
-                renderPlayer();   // Puis le joueur par-dessus
+                // ✅ Passer les matrices de caméra au renderer si nécessaire
+                renderWorld();
+                renderPlayer();
             }
 
         } catch (Exception e) {
@@ -209,5 +226,10 @@ public class TestGame implements Ilogic {
 
     public static RenderManager getRenderer() {
         return game != null ? game.renderer : null;
+    }
+
+    // ✅ Getter pour la caméra
+    public Camera getCamera() {
+        return camera;
     }
 }

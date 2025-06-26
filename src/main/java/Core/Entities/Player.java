@@ -165,6 +165,15 @@ public class Player {
                 float platformTop = platPos.y + platSize.y/2;
                 float playerBottom = newPosition.y - playerSize.y/2;
 
+                System.out.println("🔍 COLLISION CHECK:");
+                System.out.println("   Plateforme: X=" + String.format("%.2f", platPos.x) +
+                        " Y=" + String.format("%.2f", platPos.y) +
+                        " Top=" + String.format("%.2f", platformTop));
+                System.out.println("   Joueur: X=" + String.format("%.2f", newPosition.x) +
+                        " Y=" + String.format("%.2f", newPosition.y) +
+                        " Bottom=" + String.format("%.2f", playerBottom));
+                System.out.println("   Vélocité Y: " + String.format("%.3f", velocity.y));
+
                 // ✅ Si le joueur "atterrit" sur la plateforme
                 if (playerBottom <= platformTop + 0.05f && playerBottom >= platformTop - 0.2f) {
                     position.x = newPosition.x; // ✅ Mouvement horizontal OK
