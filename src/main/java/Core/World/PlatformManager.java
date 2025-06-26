@@ -15,17 +15,18 @@ public class PlatformManager {
     private final CopyOnWriteArrayList<Platform> platforms;
     private final PlatformGenerator generator;
     private final ObjectLoader loader;
+    private RenderManager renderer;
 
     private float lastGeneratedX = 0.0f;
     private volatile boolean isGenerating = false;
     private static final float GENERATION_DISTANCE = 10.0f;
 
 
-    public PlatformManager() {
-        platforms = new CopyOnWriteArrayList<>();
-        loader = ObjectLoader.getInstance();
-        // ✅ Initialiser le générateur
-        generator = new PlatformGenerator();
+    public PlatformManager(RenderManager renderer) {
+        this.renderer = renderer;
+        this.platforms = new CopyOnWriteArrayList<>();
+        this.loader = ObjectLoader.getInstance();
+        this.generator = new PlatformGenerator();
     }
 
     public void inits() {
@@ -126,15 +127,12 @@ public class PlatformManager {
     }
 
     public void render() {
-        // Obtenir le renderer depuis EngineManager ou l'injecter
-        RenderManager renderer = getRenderManager(); // À implémenter
-
         for (Platform platform : platforms) {
             try {
                 Vector3f position = platform.getPosition();
                 Model model = platform.getModel();
 
-                if (model != null && model.getTexture() != null) {
+                if (model != null && renderer != null) {
                     renderer.render(model, position);
                 }
             } catch (Exception e) {

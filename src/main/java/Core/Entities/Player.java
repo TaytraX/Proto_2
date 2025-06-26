@@ -82,10 +82,14 @@ public class Player {
     private void updateMovement() {
         calculateEffectiveDirection();
 
+        Vector3f oldPosition = new Vector3f(position);
+
+        // Appliquer la gravité
         if (!isOnGround) {
             velocity.y += GRAVITY;
         }
 
+        // Mouvement horizontal
         if (effectiveDirection == -1) {
             velocity.x = -MOVE_SPEED;
         } else if (effectiveDirection == 1) {
@@ -94,36 +98,14 @@ public class Player {
             velocity.x = 0.0f;
         }
 
-        position.add(velocity);
+        // Prédire la nouvelle position
+        Vector3f newPosition = new Vector3f(position).add(velocity);
 
+        // Vérifier les collisions avec les plateformes
+        handlePlatformCollisions(newPosition);
 
-        // ✅ Collision avec les plateformes
-        if (platforms != null) {
-            Vector3f playerSize = new Vector3f(0.8f, 1.2f, 0.1f); // Taille du joueur
-            Platform platformBelow = platforms.findPlatformBelow(position, playerSize);
-
-            if (platformBelow != null && velocity.y <= 0) {
-                float platformTop = platformBelow.getTop();
-                if (position.y <= platformTop + playerSize.y/2) {
-                    position.y = platformTop + playerSize.y/2;
-                    velocity.y = 0.0f;
-                    isOnGround = true;
-                }
-            }
-        }
-
-        // Collision avec le sol par défaut
-        if (position.y <= GROUND_LEVEL) {
-            position.y = GROUND_LEVEL;
-            velocity.y = 0.0f;
-            isOnGround = true;
-        } else if (platforms == null || platforms.findPlatformBelow(position, new Vector3f(0.8f, 1.2f, 0.1f)) == null) {
-            isOnGround = false;
-        }
-
-        // Limites horizontales
-        if (position.x < -1.0f) position.x = -1.0f;
-        if (position.x > 1.0f) position.x = 1.0f;
+        // Limites du monde
+        clampToWorldBounds();
     }
 
     private void updateAnimations() {
@@ -150,6 +132,34 @@ public class Player {
                 effectiveDirection = 0;
             }
         }
+    }
+
+    private void handlePlatformCollisions(Vector3f newPosition) {
+        if (platforms == null) {
+            handleGroundCollision();
+            return;
+        }
+
+        Vector3f playerSize = new Vector3f(0.8f, 1.2f, 0.1f);
+
+        // Collision verticale (prioritaire)
+        if (velocity.y <= 0) { // Chute ou stationnaire
+            Platform platformBelow = platforms.findPlatformBelow(newPosition, playerSize);
+            if (platformBelow != null) {
+                float platformTop = platformBelow.getTop();
+                if (newPosition.y - playerSize.y/2 <= platformTop) {
+                    position.y = platformTop + playerSize.y/2;
+                    velocity.y = 0.0f;
+                    isOnGround = true;
+                    position.x = newPosition.x; // Appliquer mouvement horizontal
+                    return;
+                }
+            }
+        }
+
+        // Pas de collision avec plateforme
+        position.set(newPosition);
+        handleGroundCollision();
     }
 
     private void updateAnimationState() {
