@@ -34,7 +34,6 @@ public class Player {
 
     // Verrous pour différentes opérations
     private final Object positionLock = new Object();
-    private final Object animationLock = new Object();
     private final Object inputLock = new Object();
     private PlatformManager platforms;
 

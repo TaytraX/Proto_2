@@ -48,6 +48,8 @@ public class EngineManager {
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthFunc(GL11.GL_LEQUAL);
         GL11.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+        System.out.println("✅ Depth test activé: " + GL11.glIsEnabled(GL11.GL_DEPTH_TEST));
     }
 
     public void start() throws Exception {
@@ -117,8 +119,8 @@ public class EngineManager {
 
         threadManager.withReadLock(() -> {
             try {
-                background.render();
-                platforms.render();
+                background.render();      // Arrière-plan en premier
+                platforms.render();       // Plateformes au milieu
                 gameLogic.render();
             } catch (Exception e) {
                 System.err.println("❌ Erreur render: " + e.getMessage());

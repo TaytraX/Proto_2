@@ -65,7 +65,7 @@ public class PlatformManager {
             // ✅ Créer les modèles OpenGL sur le thread principal
             for (PlatformData data : newPlatformData) {
                 Model model = createPlatformModel(data.getSize());
-                Platform platform = new Platform(data.getPosition(), data.getSize(), model, data.getType());
+                Platform platform = new Platform(data.getPosition(), model);
                 platforms.add(platform);
 
                 lastGeneratedX = Math.max(lastGeneratedX, data.getPosition().x);
@@ -87,26 +87,25 @@ public class PlatformManager {
         Vector3f pos1 = new Vector3f(2.0f, -0.2f, 0.0f);
         Vector3f size1 = new Vector3f(1.0f, 0.2f, 0.1f);
         Model model1 = createPlatformModel(size1);
-        platforms.add(new Platform(pos1, size1, model1, 0));
+        platforms.add(new Platform(pos1, model1));
 
         Vector3f pos2 = new Vector3f(4.0f, 0.1f, 0.0f);
         Vector3f size2 = new Vector3f(1.2f, 0.2f, 0.1f);
         Model model2 = createPlatformModel(size2);
-        platforms.add(new Platform(pos2, size2, model2, 0));
+        platforms.add(new Platform(pos2, model2));
 
         lastGeneratedX = 5.0f;
     }
 
     private Model createPlatformModel(Vector3f size) {
-        // Créer un quad de la taille appropriée
         float halfX = size.x / 2;
         float halfY = size.y / 2;
 
         float[] vertices = {
-                -halfX, -halfY, 0.0f,
-                halfX, -halfY, 0.0f,
-                halfX,  halfY, 0.0f,
-                -halfX,  halfY, 0.0f
+                -halfX, -halfY, 0.5f,  // ✅ Z=0.5 (entre background et joueur)
+                halfX, -halfY, 0.5f,
+                halfX,  halfY, 0.5f,
+                -halfX,  halfY, 0.5f
         };
 
         int[] indices = {0, 1, 2, 2, 3, 0};
@@ -126,7 +125,6 @@ public class PlatformManager {
 
         for (Platform platform : platforms) {
             Vector3f platPos = platform.getPosition();
-            Vector3f platSize = platform.getSize();
 
             // Vérifier si le joueur est horizontalement au-dessus
             boolean horizontallyAligned =
@@ -145,17 +143,24 @@ public class PlatformManager {
         return closestPlatform;
     }
 
+    // Dans PlatformManager.render()
     public void render() {
+        System.out.println("🔨 Rendu de " + platforms.size() + " plateformes");
+
         for (Platform platform : platforms) {
             try {
                 Vector3f position = platform.getPosition();
                 Model model = platform.getModel();
 
                 if (model != null && renderer != null) {
+                    System.out.println("🎯 Rendu plateforme à: " + position);
                     renderer.render(model, position);
+                } else {
+                    System.err.println("❌ Model ou renderer null");
                 }
             } catch (Exception e) {
                 System.err.println("❌ Erreur rendu plateforme: " + e.getMessage());
+                e.printStackTrace(); // ✅ Ajouter la stack trace
             }
         }
     }
