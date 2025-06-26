@@ -5,10 +5,12 @@ in vec2 textureCoord;
 
 out vec2 fragTextureCoord;
 
-uniform mat4 transformationMatrix; // ✅ NOUVEAU: Matrice de transformation
+uniform mat4 transformationMatrix;
+uniform mat4 viewMatrix;        // ✅ AJOUTÉ
+uniform mat4 projectionMatrix;  // ✅ AJOUTÉ
 
 void main() {
-    // ✅ NOUVEAU: Appliquer la transformation à la position
-    gl_Position = transformationMatrix * vec4(position, 1.0);
+    // ✅ CORRIGER: Appliquer toutes les matrices
+    gl_Position = projectionMatrix * viewMatrix * transformationMatrix * vec4(position, 1.0);
     fragTextureCoord = textureCoord;
 }

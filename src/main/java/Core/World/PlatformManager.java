@@ -121,10 +121,10 @@ public class PlatformManager {
         float halfY = size.y / 2;
 
         float[] vertices = {
-                -halfX, -halfY, -0.1f,
-                halfX, -halfY, -0.1f,
-                halfX,  halfY, -0.1f,
-                -halfX,  halfY, -0.1f
+                -halfX, -halfY, -0.2f,
+                halfX, -halfY, -0.2f,
+                halfX,  halfY, -0.2f,
+                -halfX,  halfY, -0.2f
         };
 
         int[] indices = {0, 1, 2, 2, 3, 0};
@@ -134,9 +134,12 @@ public class PlatformManager {
 
         // ✅ Ajouter une texture ou couleur simple
         try {
-            int textureId = loader.loadTexture("src/main/resources/textures/platform.png");
+            // ✅ CORRIGER: Chemin relatif aux resources
+            int textureId = loader.loadTexture("textures/platform.png");
             model.setTexture(new Texture(textureId));
+            System.out.println("✅ Texture plateforme chargée");
         } catch (Exception e) {
+            System.err.println("⚠️ Texture plateforme non trouvée, utilisation couleur par défaut");
             // Texture par défaut (couleur unie)
             int defaultTextureId = loader.createDefaultTexture();
             model.setTexture(new Texture(defaultTextureId));
