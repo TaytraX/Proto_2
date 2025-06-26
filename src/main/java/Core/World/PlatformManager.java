@@ -12,7 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class PlatformManager implements Ilogic {
 
     private final CopyOnWriteArrayList<Platform> platforms;
-    private final PlatformGenerator generator;
+    private final PlatformGenerator generator = null;
     private final ObjectLoader loader;
 
     private float lastGeneratedX = 0.0f;
