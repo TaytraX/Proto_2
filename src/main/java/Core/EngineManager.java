@@ -119,8 +119,8 @@ public class EngineManager {
 
         threadManager.withReadLock(() -> {
             try {
-                background.render();      // Arrière-plan en premier
-                platforms.render();       // Plateformes au milieu
+                background.render();      // ✅ Arrière-plan (Z=0.9)
+                platforms.render();       // ✅ Plateformes (Z=-0.1)
                 gameLogic.render();
             } catch (Exception e) {
                 System.err.println("❌ Erreur render: " + e.getMessage());

@@ -62,15 +62,17 @@ public class PlatformGenerator {
         return platforms;
     }
 
+    // Dans PlatformGenerator.calculateNextPosition()
     private Vector3f calculateNextPosition(Vector3f currentPos) {
-        float nextX = currentPos.x + random.nextFloat() * 2.0f + 1.0f;
-        float nextY = currentPos.y + (random.nextFloat() - 0.5f) * 0.5f;
+        // ✅ Espacement plus raisonnable et positions visibles
+        float nextX = currentPos.x + 1.5f + random.nextFloat() * 1.0f; // Entre 1.5 et 2.5 unités
+        float nextY = -0.4f + random.nextFloat() * 0.6f; // Entre -0.4 et 0.2
         return new Vector3f(nextX, nextY, 0.0f);
     }
 
     private Vector3f calculatePlatformSize() {
-        float width = 0.8f + random.nextFloat() * 0.4f; // 0.8 à 1.2
-        float height = 0.1f + random.nextFloat() * 0.1f; // 0.1 à 0.2
+        float width = 1.0f + random.nextFloat() * 0.8f; // 1.0 à 1.8 (plus grandes)
+        float height = 0.2f + random.nextFloat() * 0.1f; // 0.2 à 0.3
         return new Vector3f(width, height, 0.1f);
     }
 

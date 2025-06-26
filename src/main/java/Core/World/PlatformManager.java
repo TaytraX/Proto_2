@@ -2,11 +2,10 @@ package Core.World;
 
 import Core.Entities.Model;
 import Core.Entities.Platform;
-import Laucher.TestGame;
+import Core.Entities.Texture;
 import Core.ObjectLoader;
 import Core.RenderManager;
 import org.joml.Vector3f;
-import Core.Entities.Platform;
 
 import java.util.List;
 import java.util.Map;
@@ -34,18 +33,35 @@ public class PlatformManager {
         this.generator = new PlatformGenerator();
     }
 
+    // Dans PlatformManager.inits()
     public void inits() {
-        // Créer quelques plateformes initiales
         createInitialPlatforms();
+
+        // ✅ FORCER une génération immédiate pour test
+        System.out.println("🔨 Génération forcée pour test...");
+        Vector3f testPos = new Vector3f(8.0f, 0.0f, 0.0f);
+        generator.requestPlatforms(3, testPos);
+
+        // Traiter immédiatement (pour le test)
+        try {
+            Thread.sleep(100); // Laisser le temps à la génération
+            processGeneratedPlatforms();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     // ✅ Amélioration dans PlatformManager.update()
     public void update(Vector3f playerPosition) {
         try {
+            System.out.println("🎮 Player à X=" + String.format("%.2f", playerPosition.x) +
+                    ", lastGeneratedX=" + String.format("%.2f", lastGeneratedX));
+
             if (shouldGenerateMore(playerPosition) && !isGenerating) {
+                System.out.println("🔨 GÉNÉRATION DÉCLENCHÉE !");
                 isGenerating = true;
                 Vector3f startPos = new Vector3f(lastGeneratedX + 1.0f, -0.2f, 0.0f);
-                generator.requestPlatforms(8, startPos);
+                generator.requestPlatforms(5, startPos); // ✅ Moins de plateformes mais plus souvent
             }
 
             processGeneratedPlatforms();
@@ -54,7 +70,7 @@ public class PlatformManager {
         } catch (Exception e) {
             System.err.println("❌ Erreur critique dans PlatformManager: " + e.getMessage());
             e.printStackTrace();
-            isGenerating = false; // Reset du flag en cas d'erreur
+            isGenerating = false;
         }
     }
 
@@ -76,43 +92,58 @@ public class PlatformManager {
         }
     }
 
-    private String getGridKey(Vector3f position) {
-        int x = (int) (position.x / GRID_SIZE);
-        int y = (int) (position.y / GRID_SIZE);
-        return x + "," + y;
-    }
-
     private void createInitialPlatforms() {
-        // Ajouter des plateformes de base pour tester
-        Vector3f pos1 = new Vector3f(2.0f, -0.2f, 0.0f);
-        Vector3f size1 = new Vector3f(1.0f, 0.2f, 0.1f);
+        // ✅ Plateformes visibles dès le début
+        Vector3f pos1 = new Vector3f(1.5f, -0.2f, 0.0f);  // Proche du joueur (spawn à X=0)
+        Vector3f size1 = new Vector3f(1.5f, 0.3f, 0.1f);
         Model model1 = createPlatformModel(size1);
         platforms.add(new Platform(pos1, model1));
 
-        Vector3f pos2 = new Vector3f(4.0f, 0.1f, 0.0f);
-        Vector3f size2 = new Vector3f(1.2f, 0.2f, 0.1f);
+        Vector3f pos2 = new Vector3f(3.5f, 0.1f, 0.0f);   // Deuxième plateforme
+        Vector3f size2 = new Vector3f(1.2f, 0.3f, 0.1f);
         Model model2 = createPlatformModel(size2);
         platforms.add(new Platform(pos2, model2));
 
-        lastGeneratedX = 5.0f;
+        Vector3f pos3 = new Vector3f(6.0f, -0.1f, 0.0f);  // Troisième plateforme
+        Vector3f size3 = new Vector3f(1.0f, 0.3f, 0.1f);
+        Model model3 = createPlatformModel(size3);
+        platforms.add(new Platform(pos3, model3));
+
+        lastGeneratedX = 7.0f; // ✅ Mettre à jour correctement
+
+        System.out.println("✅ " + platforms.size() + " plateformes initiales créées");
+        for (Platform p : platforms) {
+            System.out.println("   - Plateforme à: " + p.getPosition());
+        }
     }
 
-    // Dans PlatformManager.createPlatformModel()
     private Model createPlatformModel(Vector3f size) {
         float halfX = size.x / 2;
         float halfY = size.y / 2;
 
         float[] vertices = {
-                -halfX, -halfY, 0.1f,  // ✅ Z=0.1 (derrière le joueur)
-                halfX, -halfY, 0.1f,
-                halfX,  halfY, 0.1f,
-                -halfX,  halfY, 0.1f
+                -halfX, -halfY, -0.1f,
+                halfX, -halfY, -0.1f,
+                halfX,  halfY, -0.1f,
+                -halfX,  halfY, -0.1f
         };
 
         int[] indices = {0, 1, 2, 2, 3, 0};
         float[] texCoords = {0, 0, 1, 0, 1, 1, 0, 1};
 
-        return loader.loadModel(vertices, texCoords, indices);
+        Model model = loader.loadModel(vertices, texCoords, indices);
+
+        // ✅ Ajouter une texture ou couleur simple
+        try {
+            int textureId = loader.loadTexture("src/main/resources/textures/platform.png");
+            model.setTexture(new Texture(textureId));
+        } catch (Exception e) {
+            // Texture par défaut (couleur unie)
+            int defaultTextureId = loader.createDefaultTexture();
+            model.setTexture(new Texture(defaultTextureId));
+        }
+
+        return model;
     }
 
     // ✅ Méthode cruciale manquante
@@ -143,23 +174,31 @@ public class PlatformManager {
     }
 
     // Dans PlatformManager.render()
+    // Dans PlatformManager.render()
+    // Dans PlatformManager.render()
     public void render() {
+        if (platforms.isEmpty()) {
+            System.err.println("❌ Aucune plateforme à rendre !");
+            return;
+        }
+
         System.out.println("🔨 Rendu de " + platforms.size() + " plateformes");
 
         for (Platform platform : platforms) {
-            try {
-                Vector3f position = platform.getPosition();
-                Model model = platform.getModel();
+            Vector3f position = platform.getPosition();
 
-                if (model != null && renderer != null) {
-                    System.out.println("🎯 Rendu plateforme à: " + position);
-                    renderer.render(model, position);
-                } else {
-                    System.err.println("❌ Model ou renderer null");
-                }
-            } catch (Exception e) {
-                System.err.println("❌ Erreur rendu plateforme: " + e.getMessage());
-                e.printStackTrace(); // ✅ Ajouter la stack trace
+            // ✅ Vérifier si la plateforme est dans une zone visible
+            if (position.x < -5.0f || position.x > 20.0f) {
+                System.out.println("⚠️ Plateforme hors champ visuel: X=" + position.x);
+                continue;
+            }
+
+            Model model = platform.getModel();
+            if (model != null && renderer != null) {
+                System.out.println("🎯 Rendu plateforme visible à: X=" +
+                        String.format("%.2f", position.x) + " Y=" +
+                        String.format("%.2f", position.y));
+                renderer.render(model, position);
             }
         }
     }
@@ -172,6 +211,10 @@ public class PlatformManager {
     }
 
     private boolean shouldGenerateMore(Vector3f playerPos) {
-        return playerPos.x > lastGeneratedX - GENERATION_DISTANCE;
+        boolean should = playerPos.x > lastGeneratedX - GENERATION_DISTANCE;
+        System.out.println("🤔 Doit générer ? " + should +
+                " (Player: " + String.format("%.2f", playerPos.x) +
+                " vs Limite: " + String.format("%.2f", lastGeneratedX - GENERATION_DISTANCE) + ")");
+        return should;
     }
 }
