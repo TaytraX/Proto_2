@@ -10,7 +10,6 @@ public class ThreadManager {
     // ✅ Un seul thread pour la logique de jeu
     private final ExecutorService gameLogicExecutor;
     private final ExecutorService backgroundExecutor;
-    private final ExecutorService platformExecutor;
 
     // Verrous pour synchroniser l'accès aux données partagées
     private final ReentrantLock playerLock = new ReentrantLock();
@@ -36,15 +35,9 @@ public class ThreadManager {
             t.setDaemon(true);
             return t;
         });
-
-        platformExecutor = Executors.newSingleThreadExecutor(r -> {
-            Thread t = new Thread(r, "Platform-Thread");
-            t.setDaemon(true);
-            return t;
-        });
     }
 
-    public Future<?> updateAllLogic(Runnable playerTask, Runnable platformTask, Runnable backgroundTask) {
+    public Future<?> updateAllLogic(Runnable playerTask, Runnable backgroundTask) {
         return gameLogicExecutor.submit(() -> {
             if (!running) return;
 
@@ -60,17 +53,6 @@ public class ThreadManager {
                     }
                 } else {
                     System.out.println("⚠️ Timeout playerTask - frame skippée");
-                }
-
-                // 2. Plateformes (dépendent du joueur)
-                if (platformLock.tryLock(TASK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                    try {
-                        platformTask.run();
-                    } finally {
-                        platformLock.unlock();
-                    }
-                } else {
-                    System.out.println("⚠️ Timeout platformTask - frame skippée");
                 }
 
                 // 3. Background (moins critique)

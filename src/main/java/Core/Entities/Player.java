@@ -3,6 +3,8 @@ package Core.Entities;
 import Core.ObjectLoader;
 import Core.World.PlatformManager;
 import org.joml.Vector3f;
+import Core.Entities.Texture;
+import Core.Entities.Animation;
 
 public class Player {
     private final Vector3f position;
@@ -120,6 +122,12 @@ public class Player {
         }
     }
 
+    private void clampToWorldBounds() {
+        // Limites horizontales (optionnel)
+        if (position.x < -10.0f) position.x = -10.0f;
+        if (position.x > 50.0f) position.x = 50.0f;
+    }
+
     private void calculateEffectiveDirection() {
         synchronized (inputLock) {
             if (isMovingLeft && isMovingRight) {
@@ -136,6 +144,7 @@ public class Player {
 
     private void handlePlatformCollisions(Vector3f newPosition) {
         if (platforms == null) {
+            position.set(newPosition);
             handleGroundCollision();
             return;
         }
@@ -147,7 +156,10 @@ public class Player {
             Platform platformBelow = platforms.findPlatformBelow(newPosition, playerSize);
             if (platformBelow != null) {
                 float platformTop = platformBelow.getTop();
-                if (newPosition.y - playerSize.y/2 <= platformTop) {
+                float playerBottom = newPosition.y - playerSize.y/2;
+
+                // ✅ Vérification plus précise
+                if (playerBottom <= platformTop && playerBottom >= platformTop - 0.2f) {
                     position.y = platformTop + playerSize.y/2;
                     velocity.y = 0.0f;
                     isOnGround = true;
@@ -197,6 +209,16 @@ public class Player {
             // ✅ Debug pour vérifier les changements d'animation
             System.out.println("🎬 Animation changée vers: " + getAnimationName(newAnimation) +
                     " (Direction: " + effectiveDirection + ", Au sol: " + isOnGround + ")");
+        }
+    }
+
+    private void handleGroundCollision() {
+        if (position.y <= GROUND_LEVEL) {
+            position.y = GROUND_LEVEL;
+            velocity.y = 0.0f;
+            isOnGround = true;
+        } else {
+            isOnGround = false;
         }
     }
 

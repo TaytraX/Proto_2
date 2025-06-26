@@ -29,31 +29,25 @@ public class EngineManager {
 
     private ThreadManager threadManager;
 
-    private void Init() throws Exception{
+    private void Init() throws Exception {
         GLFW.glfwSetErrorCallback(errorCallback = GLFWErrorCallback.createPrint(System.err));
         window = Main.getWindow();
         gameLogic = Main.getGame();
         background = Main.getBackground();
-        platforms = new PlatformManager(); // ✅ Initialisation correcte
 
-        // Initialiser le gestionnaire de threads
         threadManager = new ThreadManager();
-
         window.init();
 
-        // Initialiser les composants dans l'ordre
-        platforms.inits(); // ✅ Initialiser les plateformes
+        // ✅ Ordre d'initialisation corrigé
         background.inits();
-        gameLogic.inits();
+        gameLogic.inits();                    // TestGame en premier (crée le renderer)
+        platforms = new PlatformManager(TestGame.getRenderer()); // Puis PlatformManager
+        platforms.inits();
 
-        // Configuration OpenGL pour le rendu en couches
+        // Configuration OpenGL
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glDepthFunc(GL11.GL_LEQUAL);
         GL11.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-        if (gameLogic instanceof TestGame) {
-            // Cette liaison devrait être faite dans TestGame.inits()
-        }
     }
 
     public void start() throws Exception {
@@ -114,14 +108,6 @@ public class EngineManager {
                         gameLogic.update();
                     } catch (Exception e) {
                         System.err.println("❌ Erreur logique joueur: " + e.getMessage());
-                    }
-                },
-                () -> {
-                    try {
-                        // ✅ Pas besoin de position ici, le PlatformManager la récupère
-                        platforms.update(null); // ou passer une position par référence
-                    } catch (Exception e) {
-                        System.err.println("❌ Erreur logique plateformes: " + e.getMessage());
                     }
                 },
                 () -> {

@@ -36,7 +36,7 @@ public class TestGame implements Ilogic {
     @Override
     public void inits() throws Exception {
         renderer.init();
-        platforms = new PlatformManager();
+        platforms = new PlatformManager(TestGame.getRenderer());
 
         // ✅ Géométrie du joueur (quad 2D)
         float[] vertices = {

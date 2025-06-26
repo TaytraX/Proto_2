@@ -6,6 +6,7 @@ import Laucher.TestGame;
 import Core.ObjectLoader;
 import Core.RenderManager;
 import org.joml.Vector3f;
+import Core.Entities.Platform;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
