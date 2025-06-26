@@ -23,6 +23,8 @@ public class PlatformManager {
     private float lastGeneratedX = 0.0f;
     private volatile boolean isGenerating = false;
     private static final float GENERATION_DISTANCE = 10.0f;
+    private final int GRID_SIZE = 2; // Taille des cellules
+    private final Map<String, List<Platform>> spatialGrid = new ConcurrentHashMap<>();
 
 
     public PlatformManager(RenderManager renderer) {
@@ -37,19 +39,23 @@ public class PlatformManager {
         createInitialPlatforms();
     }
 
+    // ✅ Amélioration dans PlatformManager.update()
     public void update(Vector3f playerPosition) {
-        // ✅ Demander génération si nécessaire
-        if (shouldGenerateMore(playerPosition) && !isGenerating) {
-            isGenerating = true;
-            Vector3f startPos = new Vector3f(lastGeneratedX + 1.0f, -0.2f, 0.0f);
-            generator.requestPlatforms(8, startPos);
+        try {
+            if (shouldGenerateMore(playerPosition) && !isGenerating) {
+                isGenerating = true;
+                Vector3f startPos = new Vector3f(lastGeneratedX + 1.0f, -0.2f, 0.0f);
+                generator.requestPlatforms(8, startPos);
+            }
+
+            processGeneratedPlatforms();
+            cleanupDistantPlatforms(playerPosition);
+
+        } catch (Exception e) {
+            System.err.println("❌ Erreur critique dans PlatformManager: " + e.getMessage());
+            e.printStackTrace();
+            isGenerating = false; // Reset du flag en cas d'erreur
         }
-
-        // ✅ Traiter les plateformes générées (création de modèles OpenGL)
-        processGeneratedPlatforms();
-
-        // Cleanup habituel...
-        cleanupDistantPlatforms(playerPosition);
     }
 
     private void processGeneratedPlatforms() {
@@ -68,6 +74,12 @@ public class PlatformManager {
             isGenerating = false;
             System.out.println("🔨 " + newPlatformData.size() + " plateformes ajoutées");
         }
+    }
+
+    private String getGridKey(Vector3f position) {
+        int x = (int) (position.x / GRID_SIZE);
+        int y = (int) (position.y / GRID_SIZE);
+        return x + "," + y;
     }
 
     private void createInitialPlatforms() {
@@ -105,6 +117,10 @@ public class PlatformManager {
 
     // ✅ Méthode cruciale manquante
     public Platform findPlatformBelow(Vector3f playerPos, Vector3f playerSize) {
+
+        String playerGrid = getGridKey(playerPos);
+        List<Platform> nearbyPlatforms = spatialGrid.getOrDefault(playerGrid, platforms);
+
         Platform closestPlatform = null;
         float closestDistance = Float.MAX_VALUE;
 

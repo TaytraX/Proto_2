@@ -17,7 +17,7 @@ public class GameBackground implements Ilogic {
     public GameBackground() {
         renderer = new BackgroundManager();
         window = Main.getWindow();
-        loader = new ObjectLoader();
+        loader = ObjectLoader.getInstance();
     }
 
     @Override
@@ -26,10 +26,10 @@ public class GameBackground implements Ilogic {
 
         // Créer un quad plein écran avec Z=0 (pas -0.9)
         float[] vertices = {
-                -1.0f, -1.0f,  0.9f,  // Bas gauche
-                 1.0f, -1.0f,  0.9f,  // Bas droit
-                 1.0f,  1.0f,  0.9f,  // Haut droit
-                -1.0f,  1.0f,  0.9f   // Haut gauche
+                -1.0f, -1.0f,  0.99f,  // Bas gauche
+                 1.0f, -1.0f,  0.99f,  // Bas droit
+                 1.0f,  1.0f,  0.99f,  // Haut droit
+                -1.0f,  1.0f,  0.99f   // Haut gauche
         };
 
         // Ordre des indices correct pour le sens antihoraire

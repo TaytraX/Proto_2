@@ -65,17 +65,14 @@ public class Player {
         }
     }
 
+    // ✅ Dans Player.java - optimisation des verrous
     public void update() {
-        boolean positionChanged;
-
-        synchronized (positionLock) {
+        // Une seule synchronisation au lieu de plusieurs
+        synchronized (this) {
             Vector3f oldPosition = new Vector3f(position);
             updateMovement();
-            positionChanged = !oldPosition.equals(position);
-        }
 
-        if (positionChanged) {
-            synchronized (animationLock) {
+            if (!oldPosition.equals(position)) {
                 updateAnimations();
             }
         }
